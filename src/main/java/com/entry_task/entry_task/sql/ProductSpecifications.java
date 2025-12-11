@@ -1,0 +1,30 @@
+package com.entry_task.entry_task.sql;
+
+import com.entry_task.entry_task.model.Product;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.util.List;
+
+public class ProductSpecifications {
+    public static Specification<Product> belongsToSeller(Long sellerId) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("seller").get("id"), sellerId);
+    }
+
+    public static Specification<Product> nameContains(String keyword) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%");
+    }
+
+    public static Specification<Product> statusIn(List<Integer> statusus) {
+        return (root, query, criteriaBuilder) ->
+                root.get("productStatus").in(statusus);
+    }
+
+    public static Specification<Product> categoryIn(List<Long> categoryIds) {
+        return (root, query, criteriaBuilder) -> {
+            var join = root.join("categories");
+            return join.get("id").in(categoryIds);
+        };
+    }
+}
