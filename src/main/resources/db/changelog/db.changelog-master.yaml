@@ -3,3 +3,9 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-users-table.yaml
   - include:
       file: db/changelog/changes/002-refresh-token-table.yaml
+  - include:
+      file: db/changelog/changes/003-create-category-table.yaml
+  - include:
+      file: db/changelog/changes/004-create-products-table.yaml
+  - include:
+      file: db/changelog/changes/005-create-product-category-table.yaml

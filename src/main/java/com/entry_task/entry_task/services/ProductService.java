@@ -19,11 +19,13 @@ public class ProductService {
 
     private final AuthService authService;
     private final UserService userService;
+    private final CategoryService categoryService;
     private final ProductRepository productRepository;
 
-    public ProductService(AuthService authService, UserService userService, ProductRepository productRepository) {
+    public ProductService(AuthService authService, UserService userService, CategoryService categoryService, ProductRepository productRepository) {
         this.authService = authService;
         this.userService = userService;
+        this.categoryService = categoryService;
         this.productRepository = productRepository;
     }
 
@@ -57,6 +59,7 @@ public class ProductService {
         newProduct.setProductStatus(ProductStatus.ACTIVE);
         newProduct.setcTime(now);
         newProduct.setmTime(now);
+        newProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
         productRepository.save(newProduct);
     }
 
