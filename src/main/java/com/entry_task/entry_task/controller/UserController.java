@@ -58,4 +58,17 @@ public class UserController {
         userFavouriteService.deleteUserFavouriteByProductId(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
+
+    // Add to Cart
+    // @PostMapping("/products/{productId}")
+
+
+    // Remove from Cart
+    // @DelMapping("/products/{productId}")
+
+
+    // View Cart
+    // @GEtMapping("/cart")
+
+
 }

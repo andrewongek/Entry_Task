@@ -122,6 +122,7 @@ public class ProductService {
         return createProduct(request, user);
     }
 
+    //TODO need to remove from people's carts
     @Transactional
     public void deactivateProduct(Long productId) {
         validateAccessToProductId(productId);
@@ -134,12 +135,14 @@ public class ProductService {
         setProductStatus(productId, ProductStatus.ACTIVE);
     }
 
+    //TODO need to remove from people's carts
     @Transactional
     public void deleteProductById(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.DELETED);
     }
 
+    //TODO may need to remove/edit from people's carts if stocks drop or to 0
     @Transactional
     public void updateProductById(Long productId, ProductRequest request) {
         validateAccessToUpdateProduct(productId);
