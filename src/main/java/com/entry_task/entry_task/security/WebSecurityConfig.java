@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,11 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers("/**");
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Updated configuration for Spring Security 6.x
         http
@@ -51,7 +57,7 @@ public class WebSecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/api/test/**").permitAll()
                                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
-                                .requestMatchers("/api/test/user", "/api/user/**").hasAnyRole("USER", "SELLER", "ADMIN")
+                                .requestMatchers("/api/test/user", "/api/user/**").hasAnyRole("USER")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")
                                 .requestMatchers("/api/test/admin", "/api/admin/**", "/api/auth/admin/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()

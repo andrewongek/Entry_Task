@@ -32,7 +32,15 @@ public class ProductService {
     }
 
     public ProductInfoDto getProductInfo(long productId) {
-        return toProductInfoDto(getProductById(productId));
+        return toProductInfoDto(getActiveProductById(productId));
+    }
+
+    public Product getActiveProductById(long productId) {
+        Product product = getProductById(productId);
+        if (product.getProductStatus() != ProductStatus.ACTIVE) {
+            throw new IllegalArgumentException("Product not found");
+        }
+        return product;
     }
 
     public ProductDetailDto getSellerProductDetail(long productId) {
@@ -77,6 +85,19 @@ public class ProductService {
             userService.validateSellerId(sellerId);
         }
         Page<ProductInfoDto> page = getProductInfoList(request, sellerId);
+        return new ProductListResponse<>(
+                page.toList(),
+                new MetadataDto(
+                        page.getTotalElements(),
+                        page.getNumber(),
+                        page.getSize(),
+                        page.hasNext()
+                )
+        );
+    }
+
+    public ProductListResponse<ProductListingDto> getUserFavouriteProductListingList(ProductsListRequest request) {
+        Page<ProductListingDto> page = getUserFavouriteProductListingList(request, authService.getCurrentUser().getId());
         return new ProductListResponse<>(
                 page.toList(),
                 new MetadataDto(
@@ -173,6 +194,27 @@ public class ProductService {
         if (sellerId != null && sellerId > 0) {
             specification = specification.and(ProductSpecifications.belongsToSeller(sellerId));
         }
+        if (request.keyword() != null && !request.keyword().isBlank()) {
+            specification = specification.and(ProductSpecifications.nameContains(request.keyword()));
+        }
+        if (request.filter() != null &&
+                request.filter().categoryIds() != null &&
+                !request.filter().categoryIds().isEmpty()) {
+            specification = specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
+        }
+        return productRepository.findAll(specification, pageable).map(this::toProductListingDto);
+    }
+
+    private Page<ProductListingDto> getUserFavouriteProductListingList(ProductsListRequest request, Long userId) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(request.sort().order());
+        Pageable pageable = PageRequest.of(
+                request.pagination().page(),
+                request.pagination().size(),
+                Sort.by(sortDirection, request.sort().field())
+        );
+        Specification<Product> specification = ProductSpecifications.statusIsActive().and(
+                ProductSpecifications.isFavouritedBy(userId)
+        );
         if (request.keyword() != null && !request.keyword().isBlank()) {
             specification = specification.and(ProductSpecifications.nameContains(request.keyword()));
         }
