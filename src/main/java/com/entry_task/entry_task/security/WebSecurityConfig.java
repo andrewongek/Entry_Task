@@ -52,9 +52,9 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/auth/**", "/api/test/all", "/api/test/all/**").permitAll()
-                                .requestMatchers("/api/test/user").hasRole("USER")
+                                .requestMatchers("/api/test/user", "/api/user/**").hasAnyRole("USER", "SELLER", "ADMIN")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")
-                                .requestMatchers("/api/test/admin").hasRole("ADMIN")
+                                .requestMatchers("/api/test/admin", "/api/seller/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()
                 );
         // Add the JWT Token filter before the UsernamePasswordAuthenticationFilter

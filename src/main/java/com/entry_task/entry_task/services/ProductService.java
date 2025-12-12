@@ -6,6 +6,8 @@ import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.model.Product;
 import com.entry_task.entry_task.repository.ProductRepository;
 import com.entry_task.entry_task.sql.ProductSpecifications;
+import jakarta.transaction.Transactional;
+import org.apache.kafka.common.errors.AuthenticationException;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -48,7 +50,7 @@ public class ProductService {
 
     }
 
-    private void createProduct(CreateProductRequest request, User seller) {
+    private Long createProduct(CreateProductRequest request, User seller) {
         long now = Instant.now().getEpochSecond();
         Product newProduct = new Product();
         newProduct.setName(request.name());
@@ -60,73 +62,50 @@ public class ProductService {
         newProduct.setcTime(now);
         newProduct.setmTime(now);
         newProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
-        productRepository.save(newProduct);
+        return productRepository.save(newProduct).getId();
     }
 
-    public void createProduct(CreateProductRequest request) {
-        validateAccessToCreate(request);
-        createProduct(request, authService.getCurrentUser());
+    @Transactional
+    public Long createProduct(CreateProductRequest request) {
+        validateAccessToCreate();
+        return createProduct(request, authService.getCurrentUser());
     }
 
-    public void createProductAdmin(CreateProductRequest request) {
-        User seller = validateAccessToCreate(request);
-        createProduct(request, seller);
+    @Transactional
+    public Long createProductAdmin(CreateProductRequest request, Long sellerId) {
+        validateAdmin();
+        User user = userService.findUserBySellerId(sellerId);
+        return createProduct(request, user);
     }
-
 
     private void setProductStatus(Long productId, ProductStatus status) {
         Product product = getProductById(productId);
+        validateStatusUpdateOperation(product.getProductStatus(), status);
         product.setProductStatus(status);
         productRepository.save(product);
     }
 
+    @Transactional
     public void deactivateProduct(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.INACTIVE);
     }
 
+    @Transactional
     public void activateProduct(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.ACTIVE);
     }
 
+    @Transactional
     public void deleteProduct(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.DELETED);
     }
 
-    public Page<ProductListingDto> getProductListing(ProductsListRequest request, Long sellerId) {
-        Sort.Direction sortDirection = Sort.Direction.fromString(request.sort().order());
-        Pageable pageable = PageRequest.of(
-                request.pagination().page(),
-                request.pagination().size(),
-                Sort.by(sortDirection, request.sort().field())
-        );
-        Specification<Product> specification = Specification.unrestricted();
-        if (sellerId != null && sellerId > 0) {
-            specification.and(ProductSpecifications.belongsToSeller(sellerId));
-        }
-        if (request.keyword() != null && !request.keyword().isBlank()) {
-            specification.and(ProductSpecifications.nameContains(request.keyword()));
-        }
-        if (request.filter() != null &&
-                request.filter().statuses() != null &&
-                !request.filter().statuses().isEmpty()) {
-            specification.and(ProductSpecifications.statusIn(request.filter().statuses()));
-        }
-        if (request.filter() != null &&
-                request.filter().categoryIds() != null &&
-                !request.filter().categoryIds().isEmpty()) {
-            specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
-        }
-        return productRepository.findAll(specification, pageable).map(this::toProductListingDto);
-    }
-
-    public ProductListResponse getSellerProductInfoList(ProductsListRequest request) {
-        User currentUser = authService.getCurrentUser();
-        Long sellerId = currentUser.getId();
-        Page<ProductInfoDto> page = getProductList(request, sellerId);
-        return new ProductListResponse(
+    public ProductListResponse<ProductListingDto> getUserProductListingList(ProductsListRequest request, Long sellerId) {
+        Page<ProductListingDto> page = getProductListingList(request, sellerId);
+        return new ProductListResponse<>(
                 page.toList(),
                 new MetadataDto(
                         page.getTotalElements(),
@@ -137,9 +116,36 @@ public class ProductService {
         );
     }
 
+    public ProductListResponse<ProductInfoDto> getSellerProductInfoList(ProductsListRequest request) {
+        User currentUser = authService.getCurrentUser();
+        Long sellerId = currentUser.getId();
+        Page<ProductInfoDto> page = getProductInfoList(request, sellerId);
+        return new ProductListResponse<>(
+                page.toList(),
+                new MetadataDto(
+                        page.getTotalElements(),
+                        page.getNumber(),
+                        page.getSize(),
+                        page.hasNext()
+                )
+        );
+    }
 
-    // Can be called by the seller and admin. Seller will have the sellerId auto passed to this while admin will pass from request
-    public Page<ProductInfoDto> getProductList(ProductsListRequest request, Long sellerId) {
+    public ProductListResponse<ProductInfoDto> getAdminProductInfoList(ProductsListRequest request, Long sellerId) {
+        validateAdmin();
+        Page<ProductInfoDto> page = getProductInfoList(request, sellerId);
+        return new ProductListResponse<>(
+                page.toList(),
+                new MetadataDto(
+                        page.getTotalElements(),
+                        page.getNumber(),
+                        page.getSize(),
+                        page.hasNext()
+                )
+        );
+    }
+
+    private Page<ProductInfoDto> getProductInfoList(ProductsListRequest request, Long sellerId) {
         Sort.Direction sortDirection = Sort.Direction.fromString(request.sort().order());
         Pageable pageable = PageRequest.of(
                 request.pagination().page(),
@@ -148,32 +154,58 @@ public class ProductService {
         );
         Specification<Product> specification = Specification.unrestricted();
         if (sellerId != null && sellerId > 0) {
-            specification.and(ProductSpecifications.belongsToSeller(sellerId));
+            specification = specification.and(ProductSpecifications.belongsToSeller(sellerId));
         }
         if (request.keyword() != null && !request.keyword().isBlank()) {
-            specification.and(ProductSpecifications.nameContains(request.keyword()));
+            specification = specification.and(ProductSpecifications.nameContains(request.keyword()));
         }
         if (request.filter() != null &&
                 request.filter().statuses() != null &&
                 !request.filter().statuses().isEmpty()) {
-            specification.and(ProductSpecifications.statusIn(request.filter().statuses()));
+            specification = specification.and(ProductSpecifications.statusIn(request.filter().statuses()));
         }
         if (request.filter() != null &&
                 request.filter().categoryIds() != null &&
                 !request.filter().categoryIds().isEmpty()) {
-            specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
+            specification = specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
         }
         return productRepository.findAll(specification, pageable).map(this::toProductInfoDto);
     }
 
+    private Page<ProductListingDto> getProductListingList(ProductsListRequest request, Long sellerId) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(request.sort().order());
+        Pageable pageable = PageRequest.of(
+                request.pagination().page(),
+                request.pagination().size(),
+                Sort.by(sortDirection, request.sort().field())
+        );
+        Specification<Product> specification = ProductSpecifications.statusIsActive();
+        if (sellerId != null && sellerId > 0) {
+            specification = specification.and(ProductSpecifications.belongsToSeller(sellerId));
+        }
+        if (request.keyword() != null && !request.keyword().isBlank()) {
+            specification = specification.and(ProductSpecifications.nameContains(request.keyword()));
+        }
+        if (request.filter() != null &&
+                request.filter().categoryIds() != null &&
+                !request.filter().categoryIds().isEmpty()) {
+            specification = specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
+        }
+        return productRepository.findAll(specification, pageable).map(this::toProductListingDto);
+    }
+
     // Helper Functions
-    private User validateAccessToCreate(CreateProductRequest request) {
-        User seller = userService.getUserExistsBy(request.sellerId()).orElseThrow(() -> new IllegalArgumentException("SellerId does not exist"));
+    private void validateAccessToCreate() {
         User currentUser = authService.getCurrentUser();
         if (!currentUser.getRole().equals(Role.SELLER) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new IllegalArgumentException("You are not allowed to access this product");
         }
-        return seller;
+    }
+
+    private void validateAdmin() {
+        if (!authService.getCurrentUser().getRole().equals(Role.ADMIN)) {
+            throw new AuthenticationException("Access denied: insufficient permissions");
+        }
     }
 
     private void validateAccessToProductId(long productId) {
@@ -184,6 +216,17 @@ public class ProductService {
 
         if (!product.getSeller().getId().equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new IllegalArgumentException("You are not allowed to access this product");
+        }
+    }
+
+    private void validateStatusUpdateOperation(ProductStatus before, ProductStatus after) {
+        switch (before) {
+            case ACTIVE, INACTIVE -> {
+                if (before.equals(after)) {
+                    throw new IllegalStateException("Product Status is already " + before.name());
+                }
+            }
+            default -> throw new IllegalStateException("Invalid Product Status Change");
         }
     }
 

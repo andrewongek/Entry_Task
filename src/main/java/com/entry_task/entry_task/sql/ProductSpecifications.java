@@ -1,5 +1,6 @@
 package com.entry_task.entry_task.sql;
 
+import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.model.Product;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -19,6 +20,11 @@ public class ProductSpecifications {
     public static Specification<Product> statusIn(List<Integer> statusus) {
         return (root, query, criteriaBuilder) ->
                 root.get("productStatus").in(statusus);
+    }
+
+    public static Specification<Product> statusIsActive() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("productStatus"), ProductStatus.ACTIVE);
     }
 
     public static Specification<Product> categoryIn(List<Long> categoryIds) {

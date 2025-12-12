@@ -21,8 +21,6 @@ public record CreateProductRequest(
         Set<Long> categoryIds,
 
         @NotBlank(message = "Description is required")
-        String description,
-
-        @NotNull(message = "SellerId is required")
-        Long sellerId
-) {}
+        String description
+) {
+}

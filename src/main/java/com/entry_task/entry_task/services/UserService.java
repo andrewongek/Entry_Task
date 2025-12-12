@@ -35,12 +35,12 @@ public class UserService {
         userRepository.save(newUser);
     }
 
-    public Optional<User> getUserExistsBy(long id) {
-        return userRepository.findById(id);
+    public long getIdByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return user.getId();
     }
 
-    public long getIdByUsername(String username) {
-         var user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-         return user.getId();
+    public User findUserBySellerId(Long sellerId) {
+        return userRepository.findById(sellerId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }
