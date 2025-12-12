@@ -16,8 +16,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class WebSecurityConfig {
     @Autowired
-    CustomUserDetailsService userDetailsService;
-    @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
     @Bean
@@ -51,10 +49,11 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/auth/**", "/api/test/all", "/api/test/all/**").permitAll()
+                                .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                                 .requestMatchers("/api/test/user", "/api/user/**").hasAnyRole("USER", "SELLER", "ADMIN")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")
-                                .requestMatchers("/api/test/admin", "/api/seller/**").hasRole("ADMIN")
+                                .requestMatchers("/api/test/admin", "/api/seller/**", "/api/auth/admin/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()
                 );
         // Add the JWT Token filter before the UsernamePasswordAuthenticationFilter

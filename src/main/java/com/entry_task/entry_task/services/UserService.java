@@ -1,5 +1,6 @@
 package com.entry_task.entry_task.services;
 
+import com.entry_task.entry_task.dto.RegisterDto;
 import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.model.User;
 import com.entry_task.entry_task.repository.UserRepository;
@@ -23,14 +24,23 @@ public class UserService {
         this.userValidator = userValidator;
     }
 
-    public void registerUser(String username, String password, String email, Role role) {
-        userValidator.validateNewUser(username, email, password, role);
+    public void registerUser(RegisterDto registerDto) {
+        userValidator.validateNewUser(registerDto);
+        register(registerDto);
 
+    }
+
+    public void registerAdmin(RegisterDto registerDto) {
+        userValidator.validateNewAdmin(registerDto);
+        register(registerDto);
+    }
+
+    private void register(RegisterDto registerDto) {
         User newUser = new User();
-        newUser.setUsername(username);
-        newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setEmail(email);
-        newUser.setRole(role);
+        newUser.setUsername(registerDto.username());
+        newUser.setPassword(passwordEncoder.encode(registerDto.password()));
+        newUser.setEmail(registerDto.email());
+        newUser.setRole(registerDto.role());
 
         userRepository.save(newUser);
     }

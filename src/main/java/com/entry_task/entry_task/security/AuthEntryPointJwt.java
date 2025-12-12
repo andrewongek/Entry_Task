@@ -1,19 +1,32 @@
 package com.entry_task.entry_task.security;
 
+import com.entry_task.entry_task.api.ApiResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+
 import java.io.IOException;
+
 @Component
-public class AuthEntryPointJwt  implements AuthenticationEntryPoint {
+public class AuthEntryPointJwt implements AuthenticationEntryPoint {
+
+    private final ObjectMapper mapper = new ObjectMapper();
+
     @Override
     public void commence(
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException {
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+
+        ApiResponse<?> api = ApiResponse.error(authException.getMessage());
+        String json = mapper.writeValueAsString(api);
+
+        response.getWriter().write(json);
     }
 }
