@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-product-category-table
+      author: andrew
+      changes:
+        - createTable:
+            tableName: product_categories
+            columns:
+              - column:
+                  name: product_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pc_product
+                    references: products(id)
+
+              - column:
+                  name: category_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pc_category
+                    references: categories(id)
+
+        - addPrimaryKey:
+            tableName: product_categories
+            columnNames: product_id, category_id
+            constraintName: pk_product_categories

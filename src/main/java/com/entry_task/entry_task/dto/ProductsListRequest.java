@@ -2,7 +2,6 @@ package com.entry_task.entry_task.dto;
 
 public record ProductsListRequest(
         String keyword,
-        Long sellerId,
         PaginationDto pagination,
         FilterDto filter,
         SortDto sort

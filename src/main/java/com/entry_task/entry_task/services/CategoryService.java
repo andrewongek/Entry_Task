@@ -3,7 +3,11 @@ package com.entry_task.entry_task.services;
 import com.entry_task.entry_task.dto.CreateCategoryRequest;
 import com.entry_task.entry_task.model.Category;
 import com.entry_task.entry_task.repository.CategoryRepository;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class CategoryService {
@@ -28,10 +32,15 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        // Break ManyToMany relationship safely
         category.getProducts().forEach(product -> product.getCategories().remove(category));
         category.getProducts().clear();
 
         categoryRepository.delete(category);
+    }
+
+    public Set<Category> loadCategories(Set<Long> categoryIds) {
+        return new HashSet<>(
+                categoryRepository.findAllById(categoryIds)
+        );
     }
 }
