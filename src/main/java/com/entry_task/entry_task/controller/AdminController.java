@@ -28,7 +28,7 @@ public class AdminController {
         return ResponseEntity.ok().body(ApiResponse.success("success", responseData));
     }
 
-    @GetMapping("/products/{id}")
+    @GetMapping("/products/{productId}")
     public ResponseEntity<ApiResponse<?>> getProductDetails(@PathVariable Long productId) {
         ProductDetailDto productDetailDto = productService.getSellerProductDetail(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", productDetailDto));
@@ -39,21 +39,21 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Product created", new CreateProductResponse(productService.createProductAdmin(request, sellerId))));
     }
 
-    @PostMapping("/products/{id}/activate")
-    public ResponseEntity<ApiResponse<?>> activateProductById(@PathVariable Long id) {
-        productService.activateProduct(id);
+    @PostMapping("/products/{productId}/activate")
+    public ResponseEntity<ApiResponse<?>> activateProductById(@PathVariable Long productId) {
+        productService.activateProduct(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
 
-    @PostMapping("/products/{id}/deactivate")
-    public ResponseEntity<ApiResponse<?>> deactivateProductById(@PathVariable Long id) {
-        productService.deactivateProduct(id);
+    @PostMapping("/products/{productId}/deactivate")
+    public ResponseEntity<ApiResponse<?>> deactivateProductById(@PathVariable Long productId) {
+        productService.deactivateProduct(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
 
-    @PostMapping("/products/{id}/delete")
-    public ResponseEntity<ApiResponse<?>> deleteProductById(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    @PostMapping("/products/{productId}/delete")
+    public ResponseEntity<ApiResponse<?>> deleteProductById(@PathVariable Long productId) {
+        productService.deleteProduct(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
 }
