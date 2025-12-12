@@ -31,76 +31,13 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    private Product getProductById(long productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-    }
-
     public ProductInfoDto getProductInfo(long productId) {
         return toProductInfoDto(getProductById(productId));
-    }
-
-    private ProductDetailDto getProductDetail(long productId) {
-        return toProductDetailDto(getProductById(productId));
     }
 
     public ProductDetailDto getSellerProductDetail(long productId) {
         validateAccessToProductId(productId);
         return getProductDetail(productId);
-
-    }
-
-    private Long createProduct(CreateProductRequest request, User seller) {
-        long now = Instant.now().getEpochSecond();
-        Product newProduct = new Product();
-        newProduct.setName(request.name());
-        newProduct.setSeller(seller);
-        newProduct.setPrice(request.price());
-        newProduct.setStock(request.stock());
-        newProduct.setDescription(request.description());
-        newProduct.setProductStatus(ProductStatus.ACTIVE);
-        newProduct.setcTime(now);
-        newProduct.setmTime(now);
-        newProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
-        return productRepository.save(newProduct).getId();
-    }
-
-    @Transactional
-    public Long createProduct(CreateProductRequest request) {
-        validateAccessToCreate();
-        return createProduct(request, authService.getCurrentUser());
-    }
-
-    @Transactional
-    public Long createProductAdmin(CreateProductRequest request, Long sellerId) {
-        validateAdmin();
-        User user = userService.findUserBySellerId(sellerId);
-        return createProduct(request, user);
-    }
-
-    private void setProductStatus(Long productId, ProductStatus status) {
-        Product product = getProductById(productId);
-        validateStatusUpdateOperation(product.getProductStatus(), status);
-        product.setProductStatus(status);
-        productRepository.save(product);
-    }
-
-    @Transactional
-    public void deactivateProduct(Long productId) {
-        validateAccessToProductId(productId);
-        setProductStatus(productId, ProductStatus.INACTIVE);
-    }
-
-    @Transactional
-    public void activateProduct(Long productId) {
-        validateAccessToProductId(productId);
-        setProductStatus(productId, ProductStatus.ACTIVE);
-    }
-
-    @Transactional
-    public void deleteProduct(Long productId) {
-        validateAccessToProductId(productId);
-        setProductStatus(productId, ProductStatus.DELETED);
     }
 
     public ProductListResponse<ProductListingDto> getUserProductListingList(ProductsListRequest request, Long sellerId) {
@@ -149,6 +86,53 @@ public class ProductService {
                         page.hasNext()
                 )
         );
+    }
+
+    @Transactional
+    public Long createProduct(ProductRequest request) {
+        validateAccessToCreate();
+        return createProduct(request, authService.getCurrentUser());
+    }
+
+    @Transactional
+    public Long createProductAdmin(ProductRequest request, Long sellerId) {
+        validateAdmin();
+        User user = userService.findUserBySellerId(sellerId);
+        return createProduct(request, user);
+    }
+
+    @Transactional
+    public void deactivateProduct(Long productId) {
+        validateAccessToProductId(productId);
+        setProductStatus(productId, ProductStatus.INACTIVE);
+    }
+
+    @Transactional
+    public void activateProduct(Long productId) {
+        validateAccessToProductId(productId);
+        setProductStatus(productId, ProductStatus.ACTIVE);
+    }
+
+    @Transactional
+    public void deleteProductById(Long productId) {
+        validateAccessToProductId(productId);
+        setProductStatus(productId, ProductStatus.DELETED);
+    }
+
+    @Transactional
+    public void updateProductById(Long productId, ProductRequest request) {
+        validateAccessToUpdateProduct(productId);
+        updateProduct(productId, request);
+    }
+
+    // Private Functions
+    private Product getProductById(long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+    }
+
+    private ProductDetailDto getProductDetail(long productId) {
+        return toProductDetailDto(getProductById(productId));
     }
 
     private Page<ProductInfoDto> getProductInfoList(ProductsListRequest request, Long sellerId) {
@@ -200,6 +184,41 @@ public class ProductService {
         return productRepository.findAll(specification, pageable).map(this::toProductListingDto);
     }
 
+    private Long createProduct(ProductRequest request, User seller) {
+        long now = Instant.now().getEpochSecond();
+        Product newProduct = new Product();
+        newProduct.setName(request.name());
+        newProduct.setSeller(seller);
+        newProduct.setPrice(request.price());
+        newProduct.setStock(request.stock());
+        newProduct.setDescription(request.description());
+        newProduct.setProductStatus(ProductStatus.ACTIVE);
+        newProduct.setcTime(now);
+        newProduct.setmTime(now);
+        newProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
+        return productRepository.save(newProduct).getId();
+    }
+
+    private void updateProduct(Long productId, ProductRequest request) {
+        long now = Instant.now().getEpochSecond();
+        Product existingProduct = getProductById(productId);
+        existingProduct.setName(request.name());
+        existingProduct.setPrice(request.price());
+        existingProduct.setStock(request.stock());
+        existingProduct.setDescription(request.description());
+        existingProduct.setProductStatus(ProductStatus.ACTIVE);
+        existingProduct.setmTime(now);
+        existingProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
+        productRepository.save(existingProduct);
+    }
+
+    private void setProductStatus(Long productId, ProductStatus status) {
+        Product product = getProductById(productId);
+        validateStatusUpdateOperation(product.getProductStatus(), status);
+        product.setProductStatus(status);
+        productRepository.save(product);
+    }
+
     // Helper Functions
     private void validateAccessToCreate() {
         User currentUser = authService.getCurrentUser();
@@ -211,6 +230,17 @@ public class ProductService {
     private void validateAdmin() {
         if (!authService.getCurrentUser().getRole().equals(Role.ADMIN)) {
             throw new AuthenticationException("Access denied: insufficient permissions");
+        }
+    }
+
+    private void validateAccessToUpdateProduct(long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        User currentUser = authService.getCurrentUser();
+
+        if (!product.getSeller().getId().equals(currentUser.getId())) {
+            throw new IllegalArgumentException("You are not allowed to access this product");
         }
     }
 

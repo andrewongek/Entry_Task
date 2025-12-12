@@ -19,25 +19,31 @@ public class SellerController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<ApiResponse<?>> getProductsInfoList(@RequestBody ProductsListRequest request) {
+    public ResponseEntity<ApiResponse<?>> getSellerProductInfoList(@RequestBody ProductsListRequest request) {
         ProductListResponse<ProductInfoDto> responseData = productService.getSellerProductInfoList(request);
         return ResponseEntity.ok().body(ApiResponse.success("success", responseData));
     }
 
-    @GetMapping("/products/{id}")
-    public ResponseEntity<ApiResponse<?>> getProductDetailsById(@PathVariable Long id) {
-        ProductDetailDto productDetailDto = productService.getSellerProductDetail(id);
+    @GetMapping("/products/{productId}")
+    public ResponseEntity<ApiResponse<?>> getSellerProductDetail(@PathVariable Long productId) {
+        ProductDetailDto productDetailDto = productService.getSellerProductDetail(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", productDetailDto));
     }
 
     @PostMapping("/products")
-    public ResponseEntity<ApiResponse<?>> createProduct(@Valid @RequestBody CreateProductRequest request) {
+    public ResponseEntity<ApiResponse<?>> createProduct(@Valid @RequestBody ProductRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Product created", new CreateProductResponse(productService.createProduct(request))));
     }
 
-    @PostMapping("/products/{id}/delete")
-    public ResponseEntity<ApiResponse<?>> deleteProductById(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    @PostMapping("/products/{productId}/delete")
+    public ResponseEntity<ApiResponse<?>> deleteProductById(@PathVariable Long productId) {
+        productService.deleteProductById(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", null));
+    }
+
+    @PostMapping("/products/{productId}/update")
+    public ResponseEntity<ApiResponse<?>> updateProductById(@Valid @RequestBody ProductRequest request, @PathVariable Long productId) {
+        productService.updateProductById(productId, request);
+        return ResponseEntity.ok().body(ApiResponse.success("Product updated", null));
     }
 }
