@@ -206,7 +206,6 @@ public class ProductService {
         existingProduct.setPrice(request.price());
         existingProduct.setStock(request.stock());
         existingProduct.setDescription(request.description());
-        existingProduct.setProductStatus(ProductStatus.ACTIVE);
         existingProduct.setmTime(now);
         existingProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
         productRepository.save(existingProduct);
