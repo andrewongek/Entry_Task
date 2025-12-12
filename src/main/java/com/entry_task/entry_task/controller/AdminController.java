@@ -35,7 +35,7 @@ public class AdminController {
     }
 
     @PostMapping("/{sellerId}/products")
-    public ResponseEntity<ApiResponse<?>> createProduct(@Valid @RequestBody CreateProductRequest request, @PathVariable Long sellerId) {
+    public ResponseEntity<ApiResponse<?>> createProduct(@Valid @RequestBody ProductRequest request, @PathVariable Long sellerId) {
         return ResponseEntity.ok(ApiResponse.success("Product created", new CreateProductResponse(productService.createProductAdmin(request, sellerId))));
     }
 
@@ -48,12 +48,6 @@ public class AdminController {
     @PostMapping("/products/{productId}/deactivate")
     public ResponseEntity<ApiResponse<?>> deactivateProductById(@PathVariable Long productId) {
         productService.deactivateProduct(productId);
-        return ResponseEntity.ok().body(ApiResponse.success("success", null));
-    }
-
-    @PostMapping("/products/{productId}/delete")
-    public ResponseEntity<ApiResponse<?>> deleteProductById(@PathVariable Long productId) {
-        productService.deleteProduct(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
 }
