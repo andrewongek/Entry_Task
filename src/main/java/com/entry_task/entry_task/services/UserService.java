@@ -51,6 +51,10 @@ public class UserService {
     }
 
     public User findUserBySellerId(Long sellerId) {
-        return userRepository.findById(sellerId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userRepository.findById(sellerId).orElseThrow(() -> new IllegalArgumentException("SellerId not found"));
+    }
+
+    public void validateSellerId(Long sellerId) {
+        userRepository.findById(sellerId).orElseThrow(() -> new IllegalArgumentException("SellerId not found"));
     }
 }

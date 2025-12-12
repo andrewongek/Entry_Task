@@ -104,6 +104,9 @@ public class ProductService {
     }
 
     public ProductListResponse<ProductListingDto> getUserProductListingList(ProductsListRequest request, Long sellerId) {
+        if (sellerId != null && sellerId > 0) {
+            userService.validateSellerId(sellerId);
+        }
         Page<ProductListingDto> page = getProductListingList(request, sellerId);
         return new ProductListResponse<>(
                 page.toList(),
@@ -133,6 +136,9 @@ public class ProductService {
 
     public ProductListResponse<ProductInfoDto> getAdminProductInfoList(ProductsListRequest request, Long sellerId) {
         validateAdmin();
+        if (sellerId != null && sellerId > 0) {
+            userService.validateSellerId(sellerId);
+        }
         Page<ProductInfoDto> page = getProductInfoList(request, sellerId);
         return new ProductListResponse<>(
                 page.toList(),
