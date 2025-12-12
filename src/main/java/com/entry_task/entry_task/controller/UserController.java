@@ -5,7 +5,9 @@ import com.entry_task.entry_task.dto.ProductInfoDto;
 import com.entry_task.entry_task.dto.ProductListResponse;
 import com.entry_task.entry_task.dto.ProductListingDto;
 import com.entry_task.entry_task.dto.ProductsListRequest;
+import com.entry_task.entry_task.model.UserFavourite;
 import com.entry_task.entry_task.services.ProductService;
+import com.entry_task.entry_task.services.UserFavouriteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user")
 public class UserController {
     private final ProductService productService;
+    private final UserFavouriteService userFavouriteService;
 
-    public UserController(ProductService productService) {
+    public UserController(ProductService productService, UserFavouriteService userFavouriteService) {
         this.productService = productService;
+        this.userFavouriteService = userFavouriteService;
     }
 
     @GetMapping("/products")
@@ -34,5 +38,24 @@ public class UserController {
     public ResponseEntity<ApiResponse<?>> getProductInfo(@PathVariable Long productId) {
         ProductInfoDto productInfoDto = productService.getProductInfo(productId);
         return ResponseEntity.ok().body(ApiResponse.success("success", productInfoDto));
+    }
+
+    @GetMapping("/favourites")
+    public ResponseEntity<ApiResponse<?>> getUserFavouriteProductListingList(@RequestBody ProductsListRequest request) {
+        ProductListResponse<ProductListingDto> responseData = productService.getUserFavouriteProductListingList(request);
+        return ResponseEntity.ok().body(ApiResponse.success("success", responseData));
+    }
+
+    @PostMapping("/products/{productId}/favourite")
+    public ResponseEntity<ApiResponse<?>> setUserFavouriteByProductId(@PathVariable Long productId) {
+        userFavouriteService.setUserFavouriteByProductId(productId);
+        return ResponseEntity.ok().body(ApiResponse.success("success", null));
+
+    }
+
+    @DeleteMapping("/products/{productId}/favourite")
+    public ResponseEntity<ApiResponse<?>> deleteUserFavouriteByProductId(@PathVariable Long productId) {
+        userFavouriteService.deleteUserFavouriteByProductId(productId);
+        return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
 }
