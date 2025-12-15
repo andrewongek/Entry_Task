@@ -1,11 +1,9 @@
 package com.entry_task.entry_task.controller;
 
 import com.entry_task.entry_task.api.ApiResponse;
-import com.entry_task.entry_task.dto.ProductInfoDto;
-import com.entry_task.entry_task.dto.ProductListResponse;
-import com.entry_task.entry_task.dto.ProductListingDto;
-import com.entry_task.entry_task.dto.ProductsListRequest;
+import com.entry_task.entry_task.dto.*;
 import com.entry_task.entry_task.model.UserFavourite;
+import com.entry_task.entry_task.services.CartService;
 import com.entry_task.entry_task.services.ProductService;
 import com.entry_task.entry_task.services.UserFavouriteService;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +14,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final ProductService productService;
     private final UserFavouriteService userFavouriteService;
+    private final CartService cartService;
 
-    public UserController(ProductService productService, UserFavouriteService userFavouriteService) {
+    public UserController(ProductService productService, UserFavouriteService userFavouriteService, CartService cartService) {
         this.productService = productService;
         this.userFavouriteService = userFavouriteService;
+        this.cartService = cartService;
     }
 
     @GetMapping("/products")
@@ -60,15 +60,17 @@ public class UserController {
     }
 
     // Add to Cart
-    // @PostMapping("/products/{productId}")
-
-
-    // Remove from Cart
-    // @DelMapping("/products/{productId}")
-
+     @PostMapping("/products")
+    public ResponseEntity<ApiResponse<?>> addToCartByProductId(@RequestBody ToCartRequest request) {
+        String message = cartService.addProductToCart(request);
+        return ResponseEntity.ok().body(ApiResponse.success(message, null));
+    }
 
     // View Cart
-    // @GEtMapping("/cart")
-
+     @GetMapping("/cart")
+    public ResponseEntity<ApiResponse<?>> getCartItemList() {
+        CartListResponse response = cartService.getCart();
+        return ResponseEntity.ok().body(ApiResponse.success("success", response));
+    }
 
 }

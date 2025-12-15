@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.services;
 
-import com.entry_task.entry_task.dto.ToCartRequest;
+import com.entry_task.entry_task.dto.*;
 import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.model.Cart;
 import com.entry_task.entry_task.model.CartItem;
@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class CartService {
@@ -31,30 +32,59 @@ public class CartService {
         this.authService = authService;
     }
 
+    public CartListResponse getCart() {
+        User currentUser = authService.getCurrentUser();
+        List<CartItemProjection> projections = cartItemRepository.findCartItemProjections(currentUser.getId());
+        List<CartItemDto> items = projections.stream()
+                .map(p -> new CartItemDto(
+                        p.getCartItemId(),
+                        p.getQuantity(),
+                        new ProductListingDto(
+                                p.getProductId(),
+                                p.getProductName(),
+                                p.getSellerId(),
+                                p.getProductStock(),
+                                p.getProductPrice()
+                        ),
+                        p.getSubTotalPrice()
+                ))
+                .toList();
+        return new CartListResponse(
+                items.size(),
+                items.stream().mapToInt(CartItemDto::quantity).sum(),
+                items.stream().mapToInt(CartItemDto::subTotalPrice).sum(),
+                items,
+                items.isEmpty()
+                        ? null
+                        : projections.get(0).getCartUpdatedAt()
+        );
+    }
+
     @Transactional
-    public void addProductToCart(ToCartRequest request) {
+    public String addProductToCart(ToCartRequest request) {
         User user = authService.getCurrentUser();
         if (user.getRole() != Role.USER) {
-            throw new AccessDeniedException("Only normal users can favourite products");
+            throw new AccessDeniedException("Only normal users can add to cart");
         }
 
         if (request.quantity() == 0) {
-            deleteProductFromCart(user.getId(), request.productId());
-            return;
+            return deleteProductFromCart(user.getId(), request.productId());
         }
 
         Product product = productService.getActiveProductById(request.productId());
         if (product.getStock() <= 0) {
             throw new IllegalStateException("Product is out of stock");
         }
-
+        if (request.quantity() > product.getStock()) {
+            throw new IllegalStateException("Requested quantity exceeds stock");
+        }
         Cart cart = cartRepository.findByUserId(user.getId()).orElseGet(() -> {
             long now = Instant.now().getEpochSecond();
             Cart newCart = new Cart();
             newCart.setUser(user);
             newCart.setcTime(now);
             newCart.setmTime(now);
-            return newCart;
+            return cartRepository.save(newCart);
         });
 
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()).orElseGet(() -> {
@@ -68,13 +98,23 @@ public class CartService {
         });
 
         cartItem.setQuantity(request.quantity());
+        cartItem.setmTime(Instant.now().getEpochSecond());
+
+        cart.setmTime(Instant.now().getEpochSecond());
+        cartRepository.save(cart);
+
         cartItemRepository.save(cartItem);
+        return "cart updated";
     }
 
-    private void deleteProductFromCart(Long userId, Long productId) {
+    @Transactional
+    private String deleteProductFromCart(Long userId, Long productId) {
         Product product = productService.getActiveProductById(productId);
         Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new IllegalStateException("Cart not found for user"));
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()).orElseThrow(() -> new IllegalStateException("Product not found in Cart"));
         cartItemRepository.delete(cartItem);
+        cart.setmTime(Instant.now().getEpochSecond());
+        cartRepository.save(cart);
+        return "deleted from cart";
     }
 }
