@@ -1,0 +1,103 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-carts-table
+      author: andrew
+      changes:
+        - createTable:
+            tableName: carts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT AUTO_INCREMENT
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_carts
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: c_time
+                  type: BIGINT
+
+              - column:
+                  name: m_time
+                  type: BIGINT
+
+        - addUniqueConstraint:
+            tableName: carts
+            columnNames: user_id
+            constraintName: uq_carts_user_id
+
+        - addForeignKeyConstraint:
+            baseTableName: carts
+            baseColumnNames: user_id
+            constraintName: fk_carts_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+
+  - changeSet:
+      id: 008-create-cart-items-table
+      author: andrew
+      changes:
+        - createTable:
+            tableName: cart_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT AUTO_INCREMENT
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_cart_items
+
+              - column:
+                  name: cart_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: product_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: quantity
+                  type: INT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: c_time
+                  type: BIGINT
+
+              - column:
+                  name: m_time
+                  type: BIGINT
+
+        - addForeignKeyConstraint:
+            baseTableName: cart_items
+            baseColumnNames: cart_id
+            constraintName: fk_cart_items_cart
+            referencedTableName: carts
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: cart_items
+            baseColumnNames: product_id
+            constraintName: fk_cart_items_product
+            referencedTableName: products
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addUniqueConstraint:
+            tableName: cart_items
+            columnNames: cart_id, product_id
+            constraintName: uq_cart_items_unique_product
