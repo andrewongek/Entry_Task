@@ -4,6 +4,7 @@ import com.entry_task.entry_task.api.ApiResponse;
 import com.entry_task.entry_task.dto.*;
 import com.entry_task.entry_task.model.UserFavourite;
 import com.entry_task.entry_task.services.CartService;
+import com.entry_task.entry_task.services.OrderService;
 import com.entry_task.entry_task.services.ProductService;
 import com.entry_task.entry_task.services.UserFavouriteService;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +16,13 @@ public class UserController {
     private final ProductService productService;
     private final UserFavouriteService userFavouriteService;
     private final CartService cartService;
+    private final OrderService orderService;
 
-    public UserController(ProductService productService, UserFavouriteService userFavouriteService, CartService cartService) {
+    public UserController(ProductService productService, UserFavouriteService userFavouriteService, CartService cartService, OrderService orderService) {
         this.productService = productService;
         this.userFavouriteService = userFavouriteService;
         this.cartService = cartService;
+        this.orderService = orderService;
     }
 
     @GetMapping("/products")
@@ -60,17 +63,30 @@ public class UserController {
     }
 
     // Add to Cart
-     @PostMapping("/products")
+    @PostMapping("/products")
     public ResponseEntity<ApiResponse<?>> addToCartByProductId(@RequestBody ToCartRequest request) {
         String message = cartService.addProductToCart(request);
         return ResponseEntity.ok().body(ApiResponse.success(message, null));
     }
 
     // View Cart
-     @GetMapping("/cart")
+    @GetMapping("/cart")
     public ResponseEntity<ApiResponse<?>> getCartItemList() {
         CartListResponse response = cartService.getCart();
         return ResponseEntity.ok().body(ApiResponse.success("success", response));
     }
 
+    // Order
+    @PostMapping("/checkout")
+    public ResponseEntity<ApiResponse<?>> createOrder(@RequestBody CreateOrderRequest request) {
+        OrderResponse response = orderService.createOrder(request);
+        return ResponseEntity.ok().body(ApiResponse.success("success", null));
+    }
+
+    // View Cart
+    @GetMapping("/orders")
+    public ResponseEntity<ApiResponse<?>> getUserOrdersList(@RequestBody OrderListRequest request) {
+        OrderListResponse response = orderService.getUserOrdersList(request);
+        return ResponseEntity.ok().body(ApiResponse.success("success", response));
+    }
 }

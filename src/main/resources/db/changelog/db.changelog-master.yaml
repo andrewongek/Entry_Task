@@ -13,3 +13,7 @@ databaseChangeLog:
       file: db/changelog/changes/006-create-user-favourites-table.yaml
   - include:
       file: db/changelog/changes/007-create-cart-tables.yaml
+  - include:
+      file: db/changelog/changes/008-create-orders-table.yaml
+  - include:
+      file: db/changelog/changes/009-create-order-items-table.yaml

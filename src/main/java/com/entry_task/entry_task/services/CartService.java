@@ -8,6 +8,7 @@ import com.entry_task.entry_task.model.Product;
 import com.entry_task.entry_task.model.User;
 import com.entry_task.entry_task.repository.CartItemRepository;
 import com.entry_task.entry_task.repository.CartRepository;
+import com.entry_task.entry_task.repository.projections.CartItemProjection;
 import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -92,13 +93,13 @@ public class CartService {
             CartItem newCartItem = new CartItem();
             newCartItem.setCart(cart);
             newCartItem.setProduct(product);
-            newCartItem.setcTime(now);
-            newCartItem.setmTime(now);
+            newCartItem.setCTime(now);
+            newCartItem.setMTime(now);
             return newCartItem;
         });
 
         cartItem.setQuantity(request.quantity());
-        cartItem.setmTime(Instant.now().getEpochSecond());
+        cartItem.setMTime(Instant.now().getEpochSecond());
 
         cart.setmTime(Instant.now().getEpochSecond());
         cartRepository.save(cart);
@@ -116,5 +117,14 @@ public class CartService {
         cart.setmTime(Instant.now().getEpochSecond());
         cartRepository.save(cart);
         return "deleted from cart";
+    }
+
+    public List<CartItem> findAllCartItemsByIdAndUser(List<Long> itemIds, User user) {
+       return cartItemRepository.findAllByIdAndUser(
+                itemIds, user);
+    }
+
+    public void deleteCartItems(List<CartItem> cartItems){
+        cartItemRepository.deleteAll(cartItems);
     }
 }

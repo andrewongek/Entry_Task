@@ -31,7 +31,7 @@ public class UserService {
     }
 
     public void registerAdmin(RegisterDto registerDto) {
-        userValidator.validateNewAdmin(registerDto);
+//        userValidator.validateNewAdmin(registerDto);
         register(registerDto);
     }
 

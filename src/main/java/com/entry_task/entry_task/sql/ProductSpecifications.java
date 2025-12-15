@@ -19,9 +19,9 @@ public class ProductSpecifications {
                 criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%");
     }
 
-    public static Specification<Product> statusIn(List<Integer> statusus) {
+    public static Specification<Product> statusIn(List<Integer> statuses) {
         return (root, query, criteriaBuilder) ->
-                root.get("productStatus").in(statusus);
+                root.get("productStatus").in(statuses);
     }
 
     public static Specification<Product> statusIsActive() {

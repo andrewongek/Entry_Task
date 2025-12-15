@@ -12,20 +12,21 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    private Integer quantity;
+    @Column(nullable = false)
+    private int quantity;
 
-    @Column(name = "c_time")
+    @Column(name = "c_time", nullable = false, updatable = false)
     private Long cTime;
 
-    @Column(name = "m_time")
+    @Column(name = "m_time", nullable = false)
     private Long mTime;
 
     public Long getId() {
@@ -52,27 +53,27 @@ public class CartItem {
         this.product = product;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
-    public Long getcTime() {
+    public Long getCTime() {
         return cTime;
     }
 
-    public void setcTime(Long cTime) {
+    public void setCTime(Long cTime) {
         this.cTime = cTime;
     }
 
-    public Long getmTime() {
+    public Long getMTime() {
         return mTime;
     }
 
-    public void setmTime(Long mTime) {
+    public void setMTime(Long mTime) {
         this.mTime = mTime;
     }
 }
