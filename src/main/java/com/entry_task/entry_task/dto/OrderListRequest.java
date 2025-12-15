@@ -1,12 +1,12 @@
 package com.entry_task.entry_task.dto;
 
-public record ProductsListRequest(
+public record OrderListRequest(
         String keyword,
         PaginationDto pagination,
-        ProductFilterDto filter,
+        OrderFilterDto filter,
         SortDto sort
 ) {
-    public ProductsListRequest {
+    public OrderListRequest {
         if (pagination == null) {
             pagination = new PaginationDto(0, 10);
         }

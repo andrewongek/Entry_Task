@@ -53,6 +53,7 @@ databaseChangeLog:
                   type: BIGINT AUTO_INCREMENT
                   constraints:
                     primaryKey: true
+                    nullable: false
                     primaryKeyName: pk_cart_items
 
               - column:
@@ -76,28 +77,32 @@ databaseChangeLog:
               - column:
                   name: c_time
                   type: BIGINT
+                  constraints:
+                    nullable: false
 
               - column:
                   name: m_time
                   type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: cart_items
+            columnNames: cart_id, product_id
+            constraintName: uk_cart_items_cart_product
 
         - addForeignKeyConstraint:
             baseTableName: cart_items
             baseColumnNames: cart_id
-            constraintName: fk_cart_items_cart
             referencedTableName: carts
             referencedColumnNames: id
+            constraintName: fk_cart_items_cart
             onDelete: CASCADE
 
         - addForeignKeyConstraint:
             baseTableName: cart_items
             baseColumnNames: product_id
-            constraintName: fk_cart_items_product
             referencedTableName: products
             referencedColumnNames: id
+            constraintName: fk_cart_items_product
             onDelete: RESTRICT
-
-        - addUniqueConstraint:
-            tableName: cart_items
-            columnNames: cart_id, product_id
-            constraintName: uq_cart_items_unique_product

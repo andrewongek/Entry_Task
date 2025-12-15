@@ -1,4 +1,4 @@
-package com.entry_task.entry_task.dto;
+package com.entry_task.entry_task.repository.projections;
 
 public interface CartItemProjection {
 

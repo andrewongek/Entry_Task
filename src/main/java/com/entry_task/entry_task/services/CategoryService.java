@@ -39,8 +39,10 @@ public class CategoryService {
     }
 
     public Set<Category> loadCategories(Set<Long> categoryIds) {
-        return new HashSet<>(
-                categoryRepository.findAllById(categoryIds)
-        );
+        Set<Category> set = new HashSet<>(categoryRepository.findAllById(categoryIds));
+        if (set.size() != categoryIds.size()) {
+            throw new IllegalArgumentException("One or more categories do not exist");
+        }
+        return set;
     }
 }

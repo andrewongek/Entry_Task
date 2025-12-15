@@ -1,7 +1,7 @@
 package com.entry_task.entry_task.repository;
 
-import com.entry_task.entry_task.dto.CartItemDto;
-import com.entry_task.entry_task.dto.CartItemProjection;
+import com.entry_task.entry_task.model.User;
+import com.entry_task.entry_task.repository.projections.CartItemProjection;
 import com.entry_task.entry_task.model.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -33,4 +33,16 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
       AND p.productStatus = com.entry_task.entry_task.enums.ProductStatus.ACTIVE
 """)
     List<CartItemProjection> findCartItemProjections(@Param("userId") Long userId);
+
+    @Query("""
+        select ci
+        from CartItem ci
+        join ci.cart c
+        where ci.id in :ids
+          and c.user = :user
+    """)
+    List<CartItem> findAllByIdAndUser(
+            @Param("ids") List<Long> ids,
+            @Param("user") User user
+    );
 }
