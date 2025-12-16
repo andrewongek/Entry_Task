@@ -8,6 +8,9 @@ import com.entry_task.entry_task.repository.ProductRepository;
 import com.entry_task.entry_task.sql.ProductSpecifications;
 import jakarta.transaction.Transactional;
 import org.apache.kafka.common.errors.AuthenticationException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
+    @Cacheable(value = "product:info", key = "#productId")
     public ProductInfoDto getProductInfo(long productId) {
         return toProductInfoDto(getActiveProductById(productId));
     }
@@ -48,6 +52,10 @@ public class ProductService {
         return getProductDetail(productId);
     }
 
+    @Cacheable(
+            value = "product:list",
+            key = "T(java.util.Objects).hash(#request, #sellerId)"
+    )
     public ProductListResponse<ProductListingDto> getUserProductListingList(ProductsListRequest request, Long sellerId) {
         if (sellerId != null && sellerId > 0) {
             userService.validateSellerId(sellerId);
@@ -110,40 +118,55 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "product:list", allEntries = true)
     public Long createProduct(ProductRequest request) {
         validateAccessToCreate();
         return createProduct(request, authService.getCurrentUser());
     }
 
     @Transactional
+    @CacheEvict(value = "product:list", allEntries = true)
     public Long createProductAdmin(ProductRequest request, Long sellerId) {
         validateAdmin();
         User user = userService.findUserBySellerId(sellerId);
         return createProduct(request, user);
     }
 
-    //TODO need to remove from people's carts
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product:list", allEntries = true),
+            @CacheEvict(value = "product:info", key = "#productId")
+    })
     public void deactivateProduct(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.INACTIVE);
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product:list", allEntries = true),
+            @CacheEvict(value = "product:info", key = "#productId")
+    })
     public void activateProduct(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.ACTIVE);
     }
 
-    //TODO need to remove from people's carts
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product:list", allEntries = true),
+            @CacheEvict(value = "product:info", key = "#productId")
+    })
     public void deleteProductById(Long productId) {
         validateAccessToProductId(productId);
         setProductStatus(productId, ProductStatus.DELETED);
     }
 
-    //TODO may need to remove/edit from people's carts if stocks drop or to 0
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product:list", allEntries = true),
+            @CacheEvict(value = "product:info", key = "#productId")
+    })
     public void updateProductById(Long productId, ProductRequest request) {
         validateAccessToUpdateProduct(productId);
         updateProduct(productId, request);
