@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.security;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
+import com.entry_task.entry_task.common.api.CustomApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +24,7 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
 
-        ApiResponse<?> api = ApiResponse.error(authException.getMessage());
+        CustomApiResponse<?> api = CustomApiResponse.error(authException.getMessage());
         String json = mapper.writeValueAsString(api);
 
         response.getWriter().write(json);

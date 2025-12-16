@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.product.controller;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
+import com.entry_task.entry_task.common.api.CustomApiResponse;
 import com.entry_task.entry_task.product.dto.ProductInfo;
 import com.entry_task.entry_task.product.dto.ProductListRequest;
 import com.entry_task.entry_task.product.dto.ProductListResponse;
@@ -19,20 +19,20 @@ public class ProductController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<ApiResponse<ProductListResponse<ProductListing>>> getProductListingList(@RequestBody ProductListRequest request) {
+    public ResponseEntity<CustomApiResponse<ProductListResponse<ProductListing>>> getProductListingList(@RequestBody ProductListRequest request) {
         ProductListResponse<ProductListing> responseData = productService.getUserProductListingList(request, null);
-        return ResponseEntity.ok().body(ApiResponse.success("success", responseData));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", responseData));
     }
 
     @PostMapping("/{sellerId}/search")
-    public ResponseEntity<ApiResponse<ProductListResponse<ProductListing>>> getSellerProductListingList(@PathVariable Long sellerId, @RequestBody ProductListRequest request) {
+    public ResponseEntity<CustomApiResponse<ProductListResponse<ProductListing>>> getSellerProductListingList(@PathVariable Long sellerId, @RequestBody ProductListRequest request) {
         ProductListResponse<ProductListing> responseData = productService.getUserProductListingList(request, sellerId);
-        return ResponseEntity.ok().body(ApiResponse.success("success", responseData));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", responseData));
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ApiResponse<ProductInfo>> getProductInfo(@PathVariable Long productId) {
+    public ResponseEntity<CustomApiResponse<ProductInfo>> getProductInfo(@PathVariable Long productId) {
         ProductInfo productInfo = productService.getProductInfo(productId);
-        return ResponseEntity.ok().body(ApiResponse.success("success", productInfo));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", productInfo));
     }
 }

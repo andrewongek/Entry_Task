@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.product.controller;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
+import com.entry_task.entry_task.common.api.CustomApiResponse;
 import com.entry_task.entry_task.product.dto.*;
 import com.entry_task.entry_task.product.service.ProductService;
 import jakarta.validation.Valid;
@@ -21,31 +21,31 @@ public class SellerProductController {
     }
 
     @PostMapping("/products/search")
-    public ResponseEntity<ApiResponse<ProductListResponse<ProductInfo>>> getSellerProductInfoList(@RequestBody ProductListRequest request) {
+    public ResponseEntity<CustomApiResponse<ProductListResponse<ProductInfo>>> getSellerProductInfoList(@RequestBody ProductListRequest request) {
         ProductListResponse<ProductInfo> responseData = productService.getSellerProductInfoList(request);
-        return ResponseEntity.ok().body(ApiResponse.success("success", responseData));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", responseData));
     }
 
     @GetMapping("/products/{productId}")
-    public ResponseEntity<ApiResponse<ProductDetailResponse>> getSellerProductDetail(@PathVariable Long productId) {
+    public ResponseEntity<CustomApiResponse<ProductDetailResponse>> getSellerProductDetail(@PathVariable Long productId) {
         ProductDetailResponse productDetailDto = productService.getSellerProductDetail(productId);
-        return ResponseEntity.ok().body(ApiResponse.success("success", productDetailDto));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", productDetailDto));
     }
 
     @PostMapping("/products")
-    public ResponseEntity<ApiResponse<CreateProductResponse>> createProduct(@Valid @RequestBody CreateProductRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Product created", new CreateProductResponse(productService.createProduct(request))));
+    public ResponseEntity<CustomApiResponse<CreateProductResponse>> createProduct(@Valid @RequestBody CreateProductRequest request) {
+        return ResponseEntity.ok(CustomApiResponse.success("Product created", new CreateProductResponse(productService.createProduct(request))));
     }
 
     @DeleteMapping("/products/{productId}")
-    public ResponseEntity<ApiResponse<Void>> deleteProductById(@PathVariable Long productId) {
+    public ResponseEntity<CustomApiResponse<Void>> deleteProductById(@PathVariable Long productId) {
         productService.deleteProductById(productId);
-        return ResponseEntity.ok().body(ApiResponse.success("success", null));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", null));
     }
 
     @PutMapping("/products/{productId}")
-    public ResponseEntity<ApiResponse<Void>> updateProductById(@Valid @RequestBody UpdateProductRequest request, @PathVariable Long productId) {
+    public ResponseEntity<CustomApiResponse<Void>> updateProductById(@Valid @RequestBody UpdateProductRequest request, @PathVariable Long productId) {
         productService.updateProductById(productId, request);
-        return ResponseEntity.ok().body(ApiResponse.success("Product updated", null));
+        return ResponseEntity.ok().body(CustomApiResponse.success("Product updated", null));
     }
 }

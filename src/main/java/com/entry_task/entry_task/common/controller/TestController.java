@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.common.controller;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
+import com.entry_task.entry_task.common.api.CustomApiResponse;
 import com.entry_task.entry_task.category.dto.CreateCategoryRequest;
 import com.entry_task.entry_task.category.service.CategoryService;
 import org.slf4j.Logger;
@@ -42,8 +42,8 @@ public class TestController {
     }
 
     @PostMapping("/all/cat")
-    public ResponseEntity<ApiResponse<?>> createCategory(@RequestBody CreateCategoryRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> createCategory(@RequestBody CreateCategoryRequest request) {
         categoryService.createCategory(request);
-        return ResponseEntity.ok().body(ApiResponse.success("success", null));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", null));
     }
 }

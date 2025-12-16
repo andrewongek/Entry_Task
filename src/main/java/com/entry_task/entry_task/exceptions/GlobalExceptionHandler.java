@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.exceptions;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
+import com.entry_task.entry_task.common.api.CustomApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.kafka.common.errors.AuthenticationException;
 import org.slf4j.Logger;
@@ -31,195 +31,195 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ApiResponse<?>> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ApiResponse<?>> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<?>> handleJsonParseError(HttpMessageNotReadableException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleJsonParseError(HttpMessageNotReadableException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Malformed JSON in request"));
+                .body(CustomApiResponse.error("Malformed JSON in request"));
     }
 
     @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidDataAccess(InvalidDataAccessResourceUsageException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleInvalidDataAccess(InvalidDataAccessResourceUsageException ex, HttpServletRequest request) {
         logException(ex, request, true);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Internal server error. Please try again later."));
+                .body(CustomApiResponse.error("Internal server error. Please try again later."));
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleUsernameNotFound(UsernameNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleUsernameNotFound(UsernameNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidJwtException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidJwt(InvalidJwtException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleInvalidJwt(InvalidJwtException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleInvalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(FavouriteNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleFavouriteNotFound(FavouriteNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleFavouriteNotFound(FavouriteNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(ProductAlreadyFavouritedException.class)
-    public ResponseEntity<ApiResponse<?>> handleProductAlreadyFavourited(ProductAlreadyFavouritedException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleProductAlreadyFavourited(ProductAlreadyFavouritedException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleUserNotFound(UserNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleUserNotFound(UserNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(ProductNotActiveException.class)
-    public ResponseEntity<ApiResponse<?>> handleProductNotActive(ProductNotActiveException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleProductNotActive(ProductNotActiveException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidCartItemException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidCartItem(InvalidCartItemException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleInvalidCartItem(InvalidCartItemException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<ApiResponse<?>> handleInsufficientStock(InsufficientStockException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleInsufficientStock(InsufficientStockException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(CategoryAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<?>> handleCategoryAlreadyExists(CategoryAlreadyExistsException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleCategoryAlreadyExists(CategoryAlreadyExistsException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleCategoryNotFound(CategoryNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleCategoryNotFound(CategoryNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(CartNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleCartNotFound(CartNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleCartNotFound(CartNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(CartItemNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleCartItemNotFound(CartItemNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleCartItemNotFound(CartItemNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleProductNotFound(ProductNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleProductNotFound(ProductNotFoundException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(CustomApiResponse.error(ex.getMessage()));
     }
 
     // Wrong username / password
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<?>> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid username or password"));
+                .body(CustomApiResponse.error("Invalid username or password"));
     }
 
     // Any other authentication failure
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<?>> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Authentication failed: " + ex.getMessage()));
+                .body(CustomApiResponse.error("Authentication failed: " + ex.getMessage()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiResponse<?>> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
         logException(ex, request, false);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Duplicate value violates unique constraint"));
+                .body(CustomApiResponse.error("Duplicate value violates unique constraint"));
     }
 
     // Optional – catch any unexpected runtime errors
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<?>> handleRuntime(RuntimeException ex, HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<?>> handleRuntime(RuntimeException ex, HttpServletRequest request) {
         logException(ex, request, true);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Internal server error. Please try again later"));
+                .body(CustomApiResponse.error("Internal server error. Please try again later"));
     }
 }

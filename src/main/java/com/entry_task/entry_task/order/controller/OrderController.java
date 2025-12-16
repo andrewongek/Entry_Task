@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.order.controller;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
+import com.entry_task.entry_task.common.api.CustomApiResponse;
 import com.entry_task.entry_task.order.dto.CreateOrderRequest;
 import com.entry_task.entry_task.order.dto.OrderListRequest;
 import com.entry_task.entry_task.order.dto.OrderListResponse;
@@ -19,14 +19,14 @@ public class OrderController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<CustomApiResponse<OrderResponse>> createOrder(@RequestBody CreateOrderRequest request) {
         OrderResponse response = orderService.createOrder(request);
-        return ResponseEntity.ok().body(ApiResponse.success("success", response));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
     }
 
     @PostMapping("/search")
-    public ResponseEntity<ApiResponse<OrderListResponse>> getUserOrdersList(@RequestBody OrderListRequest request) {
+    public ResponseEntity<CustomApiResponse<OrderListResponse>> getUserOrdersList(@RequestBody OrderListRequest request) {
         OrderListResponse response = orderService.getUserOrdersList(request);
-        return ResponseEntity.ok().body(ApiResponse.success("success", response));
+        return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
     }
 }
