@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.security;
 
-import com.entry_task.entry_task.api.ApiResponse;
+import com.entry_task.entry_task.common.api.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

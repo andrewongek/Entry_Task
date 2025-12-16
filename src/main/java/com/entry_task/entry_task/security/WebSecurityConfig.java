@@ -1,6 +1,5 @@
 package com.entry_task.entry_task.security;
 
-import com.entry_task.entry_task.services.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +37,8 @@ public class WebSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers("/**");
+        return web -> web.ignoring()
+                .requestMatchers("/favicon.ico", "/static/**", "/css/**", "/js/**");
     }
 
     @Bean
@@ -57,7 +57,7 @@ public class WebSecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/api/test/**").permitAll()
                                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
-                                .requestMatchers("/api/test/user", "/api/user/**").hasAnyRole("USER")
+                                .requestMatchers("/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**").hasRole("USER")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")
                                 .requestMatchers("/api/test/admin", "/api/admin/**", "/api/auth/admin/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()

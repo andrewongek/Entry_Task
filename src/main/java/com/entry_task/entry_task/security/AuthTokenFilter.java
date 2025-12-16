@@ -1,6 +1,5 @@
 package com.entry_task.entry_task.security;
 
-import com.entry_task.entry_task.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
