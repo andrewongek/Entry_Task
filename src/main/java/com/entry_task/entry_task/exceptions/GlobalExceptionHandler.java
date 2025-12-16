@@ -1,6 +1,6 @@
 package com.entry_task.entry_task.exceptions;
 
-import com.entry_task.entry_task.api.ApiResponse;
+import com.entry_task.entry_task.common.api.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.kafka.common.errors.AuthenticationException;
 import org.slf4j.Logger;
