@@ -1,6 +1,8 @@
 package com.entry_task.entry_task.services;
 
 import com.entry_task.entry_task.dto.CreateCategoryRequest;
+import com.entry_task.entry_task.exceptions.CategoryAlreadyExistsException;
+import com.entry_task.entry_task.exceptions.CategoryNotFoundException;
 import com.entry_task.entry_task.model.Category;
 import com.entry_task.entry_task.repository.CategoryRepository;
 import jakarta.validation.constraints.NotEmpty;
@@ -20,7 +22,9 @@ public class CategoryService {
 
     public void createCategory(CreateCategoryRequest createCategoryRequest) {
         if (categoryRepository.existsByName(createCategoryRequest.name())) {
-            throw new IllegalArgumentException("Category with this name already exists");
+            throw new CategoryAlreadyExistsException(
+                    "Category with name '" + createCategoryRequest.name() + "' already exists"
+            );
         }
         Category category = new Category();
         category.setName(createCategoryRequest.name());
@@ -30,7 +34,7 @@ public class CategoryService {
 
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new CategoryNotFoundException(id));
 
         category.getProducts().forEach(product -> product.getCategories().remove(category));
         category.getProducts().clear();
@@ -41,7 +45,7 @@ public class CategoryService {
     public Set<Category> loadCategories(Set<Long> categoryIds) {
         Set<Category> set = new HashSet<>(categoryRepository.findAllById(categoryIds));
         if (set.size() != categoryIds.size()) {
-            throw new IllegalArgumentException("One or more categories do not exist");
+            throw new CategoryNotFoundException("One or more categories do not exist");
         }
         return set;
     }

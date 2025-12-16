@@ -2,6 +2,7 @@ package com.entry_task.entry_task.services;
 
 import com.entry_task.entry_task.dto.RegisterDto;
 import com.entry_task.entry_task.enums.Role;
+import com.entry_task.entry_task.exceptions.UserNotFoundException;
 import com.entry_task.entry_task.model.User;
 import com.entry_task.entry_task.repository.UserRepository;
 import com.entry_task.entry_task.validator.UserValidator;
@@ -31,7 +32,7 @@ public class UserService {
     }
 
     public void registerAdmin(RegisterDto registerDto) {
-//        userValidator.validateNewAdmin(registerDto);
+        userValidator.validateNewAdmin(registerDto);
         register(registerDto);
     }
 
@@ -41,15 +42,19 @@ public class UserService {
     }
 
     public long getIdByUsername(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
         return user.getId();
     }
 
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+    }
+
     public User findUserBySellerId(Long sellerId) {
-        return userRepository.findById(sellerId).orElseThrow(() -> new IllegalArgumentException("SellerId not found"));
+        return getUserById(sellerId);
     }
 
     public void validateSellerId(Long sellerId) {
-        userRepository.findById(sellerId).orElseThrow(() -> new IllegalArgumentException("SellerId not found"));
+        getUserById(sellerId);
     }
 }

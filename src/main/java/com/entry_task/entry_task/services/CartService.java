@@ -2,6 +2,9 @@ package com.entry_task.entry_task.services;
 
 import com.entry_task.entry_task.dto.*;
 import com.entry_task.entry_task.enums.Role;
+import com.entry_task.entry_task.exceptions.CartItemNotFoundException;
+import com.entry_task.entry_task.exceptions.CartNotFoundException;
+import com.entry_task.entry_task.exceptions.InsufficientStockException;
 import com.entry_task.entry_task.model.Cart;
 import com.entry_task.entry_task.model.CartItem;
 import com.entry_task.entry_task.model.Product;
@@ -11,6 +14,7 @@ import com.entry_task.entry_task.repository.CartRepository;
 import com.entry_task.entry_task.repository.projections.CartItemProjection;
 import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -23,10 +27,7 @@ public class CartService {
     private final ProductService productService;
     private final AuthService authService;
 
-    public CartService(CartRepository cartRepository,
-                       CartItemRepository cartItemRepository,
-                       ProductService productService,
-                       AuthService authService) {
+    public CartService(CartRepository cartRepository, CartItemRepository cartItemRepository, ProductService productService, AuthService authService) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productService = productService;
@@ -36,48 +37,22 @@ public class CartService {
     public CartListResponse getCart() {
         User currentUser = authService.getCurrentUser();
         List<CartItemProjection> projections = cartItemRepository.findCartItemProjections(currentUser.getId());
-        List<CartItemDto> items = projections.stream()
-                .map(p -> new CartItemDto(
-                        p.getCartItemId(),
-                        p.getQuantity(),
-                        new ProductListingDto(
-                                p.getProductId(),
-                                p.getProductName(),
-                                p.getSellerId(),
-                                p.getProductStock(),
-                                p.getProductPrice()
-                        ),
-                        p.getSubTotalPrice()
-                ))
-                .toList();
-        return new CartListResponse(
-                items.size(),
-                items.stream().mapToInt(CartItemDto::quantity).sum(),
-                items.stream().mapToInt(CartItemDto::subTotalPrice).sum(),
-                items,
-                items.isEmpty()
-                        ? null
-                        : projections.get(0).getCartUpdatedAt()
-        );
+        List<CartItemDto> items = projections.stream().map(p -> new CartItemDto(p.getCartItemId(), p.getQuantity(), new ProductListingDto(p.getProductId(), p.getProductName(), p.getSellerId(), p.getProductStock(), p.getProductPrice()), p.getSubTotalPrice())).toList();
+        return new CartListResponse(items.size(), items.stream().mapToInt(CartItemDto::quantity).sum(), items.stream().mapToInt(CartItemDto::subTotalPrice).sum(), items, items.isEmpty() ? null : projections.get(0).getCartUpdatedAt());
     }
 
     @Transactional
+    @PreAuthorize("hasRole('USER')")
     public String addProductToCart(ToCartRequest request) {
         User user = authService.getCurrentUser();
-        if (user.getRole() != Role.USER) {
-            throw new AccessDeniedException("Only normal users can add to cart");
-        }
 
         if (request.quantity() == 0) {
             return deleteProductFromCart(user.getId(), request.productId());
         }
 
         Product product = productService.getActiveProductById(request.productId());
-        if (product.getStock() <= 0) {
-            throw new IllegalStateException("Product is out of stock");
-        }
-        if (request.quantity() > product.getStock()) {
-            throw new IllegalStateException("Requested quantity exceeds stock");
+        if (product.getStock() <= 0 || request.quantity() > product.getStock()) {
+            throw new InsufficientStockException("Insufficient stock for product: " + product.getId());
         }
         Cart cart = cartRepository.findByUserId(user.getId()).orElseGet(() -> {
             long now = Instant.now().getEpochSecond();
@@ -111,8 +86,8 @@ public class CartService {
     @Transactional
     private String deleteProductFromCart(Long userId, Long productId) {
         Product product = productService.getActiveProductById(productId);
-        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new IllegalStateException("Cart not found for user"));
-        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()).orElseThrow(() -> new IllegalStateException("Product not found in Cart"));
+        Cart cart = cartRepository.findByUserId(userId).orElseThrow(() -> new CartNotFoundException("Cart not found for user"));
+        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()).orElseThrow(() -> new CartItemNotFoundException("Item not found in Cart"));
         cartItemRepository.delete(cartItem);
         cart.setmTime(Instant.now().getEpochSecond());
         cartRepository.save(cart);
@@ -120,11 +95,10 @@ public class CartService {
     }
 
     public List<CartItem> findAllCartItemsByIdAndUser(List<Long> itemIds, User user) {
-       return cartItemRepository.findAllByIdAndUser(
-                itemIds, user);
+        return cartItemRepository.findAllByIdAndUser(itemIds, user);
     }
 
-    public void deleteCartItems(List<CartItem> cartItems){
+    public void deleteCartItems(List<CartItem> cartItems) {
         cartItemRepository.deleteAll(cartItems);
     }
 }

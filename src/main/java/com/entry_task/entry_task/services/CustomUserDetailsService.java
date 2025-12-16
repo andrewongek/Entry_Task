@@ -1,5 +1,6 @@
 package com.entry_task.entry_task.services;
 
+import com.entry_task.entry_task.exceptions.UserNotFoundException;
 import com.entry_task.entry_task.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-         return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
 
     }
 }

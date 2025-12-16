@@ -16,16 +16,16 @@ public class RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public RefreshTokenService(RefreshTokenRepository repo, UserRepository userRepo) {
+    public RefreshTokenService(RefreshTokenRepository repo, UserService userService) {
         this.refreshTokenRepository = repo;
-        this.userRepository = userRepo;
+        this.userService = userService;
     }
 
     public RefreshToken createRefreshToken(Long userId) {
         var token = new RefreshToken();
-        token.setUser(userRepository.findById(userId).get());
+        token.setUser(userService.getUserById(userId));
         token.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
         token.setToken(UUID.randomUUID().toString());
         return refreshTokenRepository.save(token);

@@ -3,6 +3,9 @@ package com.entry_task.entry_task.services;
 import com.entry_task.entry_task.dto.*;
 import com.entry_task.entry_task.enums.OrderStatus;
 import com.entry_task.entry_task.enums.ProductStatus;
+import com.entry_task.entry_task.exceptions.InsufficientStockException;
+import com.entry_task.entry_task.exceptions.InvalidCartItemException;
+import com.entry_task.entry_task.exceptions.ProductNotActiveException;
 import com.entry_task.entry_task.model.*;
 import com.entry_task.entry_task.repository.OrderItemRepository;
 import com.entry_task.entry_task.repository.OrderRepository;
@@ -41,20 +44,37 @@ public class OrderService {
                         request.cartItemIds(), user);
 
         if (cartItems.size() != request.cartItemIds().size()) {
-            throw new IllegalArgumentException("Invalid cart items");
+            throw new InvalidCartItemException("One or more cart items are invalid");
         }
 
+        Order order = getOrder(user, cartItems);
+        orderRepository.save(order);
+
+        cartService.deleteCartItems(cartItems);
+
+        return new OrderResponse(
+                order.getId(),
+                order.getStatus().name(),
+                order.getTotalAmount(),
+                order.getcTime(),
+                order.getmTime()
+        );
+    }
+
+    private static Order getOrder(User user, List<CartItem> cartItems) {
         Order order = new Order(user);
 
         for (CartItem item : cartItems) {
             Product product = item.getProduct();
 
             if (!product.getProductStatus().equals(ProductStatus.ACTIVE)) {
-                throw new IllegalStateException("Product unavailable");
+                throw new ProductNotActiveException();
             }
 
             if (product.getStock() < item.getQuantity()) {
-                throw new IllegalStateException("Insufficient stock");
+                throw new InsufficientStockException(
+                        "Insufficient stock for product: " + product.getId()
+                );
             }
 
             OrderItem orderItem = new OrderItem();
@@ -68,17 +88,7 @@ public class OrderService {
         }
 
         order.recalculateTotal();
-        orderRepository.save(order);
-
-        cartService.deleteCartItems(cartItems);
-
-        return new OrderResponse(
-                order.getId(),
-                order.getStatus().name(),
-                order.getTotalAmount(),
-                order.getcTime(),
-                order.getmTime()
-        );
+        return order;
     }
 
     public OrderListResponse getUserOrdersList(OrderListRequest request) {

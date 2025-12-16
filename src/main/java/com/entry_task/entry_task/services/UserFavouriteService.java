@@ -1,11 +1,14 @@
 package com.entry_task.entry_task.services;
 
 import com.entry_task.entry_task.enums.Role;
+import com.entry_task.entry_task.exceptions.FavouriteNotFoundException;
+import com.entry_task.entry_task.exceptions.ProductAlreadyFavouritedException;
 import com.entry_task.entry_task.model.Product;
 import com.entry_task.entry_task.model.User;
 import com.entry_task.entry_task.model.UserFavourite;
 import com.entry_task.entry_task.repository.UserFavouriteRepository;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,27 +25,26 @@ public class UserFavouriteService {
         this.authService = authService;
     }
 
+    @PreAuthorize("hasRole('USER')")
     public void setUserFavouriteByProductId(Long productId) {
         Product product = productService.getActiveProductById(productId);
         User user = authService.getCurrentUser();
-        if (user.getRole() != Role.USER) {
-            throw new AccessDeniedException("Only normal users can favourite products");
-        }
         Optional<UserFavourite> exists = userFavouriteRepository.findByUserIdAndProductId(user.getId(), product.getId());
         if (exists.isPresent()) {
-            throw new IllegalStateException("Product is already favourited by User");
+            throw new ProductAlreadyFavouritedException();
         } else {
             setUserFavourite(user, product);
         }
     }
 
+    @PreAuthorize("hasRole('USER')")
     public void deleteUserFavouriteByProductId(Long productId) {
         Product product = productService.getActiveProductById(productId);
         User user = authService.getCurrentUser();
         if (user.getRole() != Role.USER) {
             throw new AccessDeniedException("Only normal users can favourite products");
         }
-        UserFavourite userFavourite = userFavouriteRepository.findByUserIdAndProductId(user.getId(), product.getId()).orElseThrow(() -> new IllegalStateException("Product is already not favourited by User"));
+        UserFavourite userFavourite = userFavouriteRepository.findByUserIdAndProductId(user.getId(), product.getId()).orElseThrow(() -> new FavouriteNotFoundException("Product is already not favourited by User"));
         deleteUserFavourite(userFavourite);
     }
 

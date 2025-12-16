@@ -3,16 +3,19 @@ package com.entry_task.entry_task.services;
 import com.entry_task.entry_task.dto.*;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.enums.Role;
+import com.entry_task.entry_task.exceptions.ProductNotActiveException;
+import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.model.Product;
 import com.entry_task.entry_task.repository.ProductRepository;
 import com.entry_task.entry_task.sql.ProductSpecifications;
 import jakarta.transaction.Transactional;
-import org.apache.kafka.common.errors.AuthenticationException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import com.entry_task.entry_task.model.User;
 import com.entry_task.entry_task.model.Category;
@@ -42,13 +45,15 @@ public class ProductService {
     public Product getActiveProductById(long productId) {
         Product product = getProductById(productId);
         if (product.getProductStatus() != ProductStatus.ACTIVE) {
-            throw new IllegalArgumentException("Product not found");
+            throw new ProductNotActiveException();
         }
         return product;
     }
 
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ProductDetailDto getSellerProductDetail(long productId) {
-        validateAccessToProductId(productId);
+        Product product = getProductById(productId);
+        validateProductOwnership(product);
         return getProductDetail(productId);
     }
 
@@ -87,8 +92,8 @@ public class ProductService {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductListResponse<ProductInfoDto> getAdminProductInfoList(ProductsListRequest request, Long sellerId) {
-        validateAdmin();
         if (sellerId != null && sellerId > 0) {
             userService.validateSellerId(sellerId);
         }
@@ -119,15 +124,15 @@ public class ProductService {
 
     @Transactional
     @CacheEvict(value = "product:list", allEntries = true)
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public Long createProduct(ProductRequest request) {
-        validateAccessToCreate();
         return createProduct(request, authService.getCurrentUser());
     }
 
     @Transactional
     @CacheEvict(value = "product:list", allEntries = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public Long createProductAdmin(ProductRequest request, Long sellerId) {
-        validateAdmin();
         User user = userService.findUserBySellerId(sellerId);
         return createProduct(request, user);
     }
@@ -137,8 +142,10 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public void deactivateProduct(Long productId) {
-        validateAccessToProductId(productId);
+        Product product = getProductById(productId);
+        validateProductOwnership(product);
         setProductStatus(productId, ProductStatus.INACTIVE);
     }
 
@@ -147,8 +154,10 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public void activateProduct(Long productId) {
-        validateAccessToProductId(productId);
+        Product product = getProductById(productId);
+        validateProductOwnership(product);
         setProductStatus(productId, ProductStatus.ACTIVE);
     }
 
@@ -157,8 +166,10 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public void deleteProductById(Long productId) {
-        validateAccessToProductId(productId);
+        Product product = getProductById(productId);
+        validateProductOwnership(product);
         setProductStatus(productId, ProductStatus.DELETED);
     }
 
@@ -167,15 +178,17 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
+    @PreAuthorize("hasRole('SELLER')")
     public void updateProductById(Long productId, ProductRequest request) {
-        validateAccessToUpdateProduct(productId);
-        updateProduct(productId, request);
+        Product product = getProductById(productId);
+        validateProductOwnership(product);
+        updateProduct(product, request);
     }
 
     // Private Functions
     private Product getProductById(long productId) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(ProductNotFoundException::new);
     }
 
     private ProductDetailDto getProductDetail(long productId) {
@@ -267,16 +280,15 @@ public class ProductService {
         return productRepository.save(newProduct).getId();
     }
 
-    private void updateProduct(Long productId, ProductRequest request) {
+    private void updateProduct(Product product, ProductRequest request) {
         long now = Instant.now().getEpochSecond();
-        Product existingProduct = getProductById(productId);
-        existingProduct.setName(request.name());
-        existingProduct.setPrice(request.price());
-        existingProduct.setStock(request.stock());
-        existingProduct.setDescription(request.description());
-        existingProduct.setmTime(now);
-        existingProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
-        productRepository.save(existingProduct);
+        product.setName(request.name());
+        product.setPrice(request.price());
+        product.setStock(request.stock());
+        product.setDescription(request.description());
+        product.setmTime(now);
+        product.setCategories(categoryService.loadCategories(request.categoryIds()));
+        productRepository.save(product);
     }
 
     private void setProductStatus(Long productId, ProductStatus status) {
@@ -286,39 +298,13 @@ public class ProductService {
         productRepository.save(product);
     }
 
-    // Helper Functions
-    private void validateAccessToCreate() {
+    private void validateProductOwnership(Product product) {
         User currentUser = authService.getCurrentUser();
-        if (!currentUser.getRole().equals(Role.SELLER) && !currentUser.getRole().equals(Role.ADMIN)) {
-            throw new IllegalArgumentException("You are not allowed to access this product");
+        if (currentUser.getRole() == Role.ADMIN) {
+            return;
         }
-    }
-
-    private void validateAdmin() {
-        if (!authService.getCurrentUser().getRole().equals(Role.ADMIN)) {
-            throw new AuthenticationException("Access denied: insufficient permissions");
-        }
-    }
-
-    private void validateAccessToUpdateProduct(long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-
-        User currentUser = authService.getCurrentUser();
-
         if (!product.getSeller().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("You are not allowed to access this product");
-        }
-    }
-
-    private void validateAccessToProductId(long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-
-        User currentUser = authService.getCurrentUser();
-
-        if (!product.getSeller().getId().equals(currentUser.getId()) && !currentUser.getRole().equals(Role.ADMIN)) {
-            throw new IllegalArgumentException("You are not allowed to access this product");
+            throw new AccessDeniedException("You do not own this product");
         }
     }
 
