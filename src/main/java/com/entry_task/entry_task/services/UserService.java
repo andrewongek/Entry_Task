@@ -36,12 +36,7 @@ public class UserService {
     }
 
     private void register(RegisterDto registerDto) {
-        User newUser = new User();
-        newUser.setUsername(registerDto.username());
-        newUser.setPassword(passwordEncoder.encode(registerDto.password()));
-        newUser.setEmail(registerDto.email());
-        newUser.setRole(registerDto.role());
-
+        User newUser = new User(registerDto.username(), passwordEncoder.encode(registerDto.password()), registerDto.email(), registerDto.role());
         userRepository.save(newUser);
     }
 
