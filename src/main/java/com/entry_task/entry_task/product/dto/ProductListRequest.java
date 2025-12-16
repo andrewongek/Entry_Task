@@ -2,19 +2,29 @@ package com.entry_task.entry_task.product.dto;
 
 import com.entry_task.entry_task.common.dto.Pagination;
 import com.entry_task.entry_task.common.dto.Sort;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Request parameters for fetching a list of products with optional filters, pagination, and sorting. Can be left empty for default")
 public record ProductListRequest(
+
+        @Schema(description = "Keyword to search products by name or description", example = "laptop")
         String keyword,
+
+        @Schema(description = "Pagination settings")
         Pagination pagination,
+
+        @Schema(description = "Filters to apply on the product list")
         ProductFilter filter,
+
+        @Schema(description = "Sorting options for the product list")
         Sort sort
 ) {
     public ProductListRequest {
         if (pagination == null) {
-            pagination = new Pagination(0, 10);
+            pagination = new Pagination(0, 10); // default page 0, size 10
         }
         if (sort == null) {
-            sort = new Sort("id", "ASC");
+            sort = new Sort("id", "ASC"); // default sort by ID ascending
         }
     }
 }
