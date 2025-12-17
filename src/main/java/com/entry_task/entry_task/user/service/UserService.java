@@ -4,7 +4,8 @@ import com.entry_task.entry_task.auth.dto.RegisterRequest;
 import com.entry_task.entry_task.exceptions.UserNotFoundException;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
-import com.entry_task.entry_task.user.validator.UserValidator;
+import com.entry_task.entry_task.user.validator.UserRegistrationValidator;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -12,22 +13,23 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-    private final UserValidator userValidator;
+    private final UserRegistrationValidator userRegistrationValidator;
 
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, UserValidator userValidator) {
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
-        this.userValidator = userValidator;
+        this.userRegistrationValidator = userRegistrationValidator;
     }
 
+    @PreAuthorize("hasAnyRole('SELLER', 'USER')")
     public void registerUser(RegisterRequest registerRequest) {
-        userValidator.validateNewUser(registerRequest);
+        userRegistrationValidator.validateRegistrationRequest(registerRequest);
         register(registerRequest);
 
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     public void registerAdmin(RegisterRequest registerRequest) {
-        userValidator.validateNewAdmin(registerRequest);
+        userRegistrationValidator.validateRegistrationRequest(registerRequest);
         register(registerRequest);
     }
 

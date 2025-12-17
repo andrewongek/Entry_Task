@@ -1,13 +1,12 @@
 package com.entry_task.entry_task.common.controller;
 
-import com.entry_task.entry_task.common.api.ApiResponse;
-import com.entry_task.entry_task.category.dto.CreateCategoryRequest;
 import com.entry_task.entry_task.category.service.CategoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Hidden;
 
+@Hidden
 @RestController
 @RequestMapping("/api/test")
 public class TestController {
@@ -39,11 +38,5 @@ public class TestController {
     @GetMapping("/admin")
     public String adminAccess() {
         return "Admin Content.";
-    }
-
-    @PostMapping("/all/cat")
-    public ResponseEntity<ApiResponse<?>> createCategory(@RequestBody CreateCategoryRequest request) {
-        categoryService.createCategory(request);
-        return ResponseEntity.ok().body(ApiResponse.success("success", null));
     }
 }

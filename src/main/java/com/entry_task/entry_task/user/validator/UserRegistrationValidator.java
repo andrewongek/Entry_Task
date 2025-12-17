@@ -1,32 +1,19 @@
 package com.entry_task.entry_task.user.validator;
 
 import com.entry_task.entry_task.auth.dto.RegisterRequest;
-import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.user.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserValidator {
+public class UserRegistrationValidator {
 
     private final UserRepository userRepository;
 
-    public UserValidator(UserRepository userRepository) {
+    public UserRegistrationValidator(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public void validateNewAdmin(RegisterRequest registerRequest) {
-
-        validateNewCommon(registerRequest);
-    }
-
-    public void validateNewUser(RegisterRequest registerRequest) {
-        if (!Role.USER.equals(registerRequest.role()) && !Role.SELLER.equals(registerRequest.role())) {
-            throw new IllegalArgumentException("Role must be either USER or SELLER");
-        }
-        validateNewCommon(registerRequest);
-    }
-
-    public void validateNewCommon(RegisterRequest registerRequest) {
+    public void validateRegistrationRequest(RegisterRequest registerRequest) {
         if (registerRequest.username() == null || registerRequest.username().isBlank()) {
             throw new IllegalArgumentException("Username cannot be empty");
         }

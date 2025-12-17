@@ -38,7 +38,7 @@ public class WebSecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-                .requestMatchers("/favicon.ico", "/static/**", "/css/**", "/js/**");
+                .requestMatchers("/favicon.ico", "/static/**", "/css/**", "/js/**", "/swagger-ui/**", "/v3/api-docs*/**");
     }
 
     @Bean
@@ -59,7 +59,7 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                                 .requestMatchers("/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**").hasRole("USER")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")
-                                .requestMatchers("/api/test/admin", "/api/admin/**", "/api/auth/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/test/admin", "/api/admin/**", "/api/auth/admin/**", "/api/category/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()
                 );
         // Add the JWT Token filter before the UsernamePasswordAuthenticationFilter
