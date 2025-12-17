@@ -1,6 +1,7 @@
 package com.entry_task.entry_task.exceptions;
 
 import com.entry_task.entry_task.common.api.CustomApiResponse;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.kafka.common.errors.AuthenticationException;
 import org.slf4j.Logger;
@@ -44,6 +45,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(CustomApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(OptimisticLockException.class)
+    public ResponseEntity<CustomApiResponse<Void>> handleOptimisticLock(OptimisticLockException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(CustomApiResponse.error("Concurrent updates detected. Please try again."));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

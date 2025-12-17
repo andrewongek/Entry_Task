@@ -4,6 +4,7 @@ import com.entry_task.entry_task.enums.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
@@ -23,7 +24,7 @@ public record RegisterRequest(
         @Schema(description = "User email address", example = "testuser@example.com")
         String email,
 
-        @NotBlank(message = "Role is required")
+        @NotNull(message = "Role is required")
         @Schema(description = "Role of the user", example = "USER")
         Role role
 ) {

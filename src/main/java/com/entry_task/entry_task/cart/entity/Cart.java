@@ -26,6 +26,9 @@ public class Cart {
     @Column(name = "m_time")
     private Long mTime;
 
+    @Version
+    private Long version;
+
     public Long getId() {
         return id;
     }
@@ -64,5 +67,13 @@ public class Cart {
 
     public void setmTime(Long mTime) {
         this.mTime = mTime;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

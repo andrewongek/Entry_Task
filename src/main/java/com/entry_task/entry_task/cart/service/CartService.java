@@ -16,7 +16,9 @@ import com.entry_task.entry_task.cart.repository.CartItemRepository;
 import com.entry_task.entry_task.cart.repository.CartRepository;
 import com.entry_task.entry_task.cart.repository.projections.CartItemProjection;
 import com.entry_task.entry_task.product.service.ProductService;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -65,8 +67,9 @@ public class CartService {
                 items.isEmpty() ? null : projections.get(0).getCartUpdatedAt());
     }
 
-    @Transactional
     @PreAuthorize("hasRole('USER')")
+    @Transactional
+    @Retryable(retryFor = {OptimisticLockException.class})
     public String addProductToCart(UpdateCartRequest request) {
         User user = authService.getCurrentUser();
 
@@ -99,11 +102,11 @@ public class CartService {
 
         cartItem.setQuantity(request.quantity());
         cartItem.setMTime(Instant.now().getEpochSecond());
-
         cart.setmTime(Instant.now().getEpochSecond());
-        cartRepository.save(cart);
 
         cartItemRepository.save(cartItem);
+        cartRepository.save(cart);
+
         return "cart updated";
     }
 

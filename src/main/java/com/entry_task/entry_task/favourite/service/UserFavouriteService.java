@@ -12,6 +12,7 @@ import com.entry_task.entry_task.product.dto.ProductListResponse;
 import com.entry_task.entry_task.product.dto.ProductListing;
 import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.favourite.repository.UserFavouriteRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class UserFavouriteService {
         return productService.getUserFavouriteProductListingList(request);
     }
 
+    @Transactional
     @PreAuthorize("hasRole('USER')")
     public void setUserFavouriteByProductId(Long productId) {
         Product product = productService.getActiveProductById(productId);
@@ -42,11 +44,11 @@ public class UserFavouriteService {
         Optional<UserFavourite> exists = userFavouriteRepository.findByUserIdAndProductId(user.getId(), product.getId());
         if (exists.isPresent()) {
             throw new ProductAlreadyFavouritedException();
-        } else {
-            setUserFavourite(user, product);
         }
+        setUserFavourite(user, product);
     }
 
+    @Transactional
     @PreAuthorize("hasRole('USER')")
     public void deleteUserFavouriteByProductId(Long productId) {
         Product product = productService.getActiveProductById(productId);

@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-add-version-column-to-cart-tables
+      author: andrew
+      changes:
+        - addColumn:
+            tableName: carts
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+        - addColumn:
+            tableName: cart_items
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0

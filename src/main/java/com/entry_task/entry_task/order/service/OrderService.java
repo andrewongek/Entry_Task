@@ -8,6 +8,7 @@ import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.exceptions.InsufficientStockException;
 import com.entry_task.entry_task.exceptions.InvalidCartItemException;
 import com.entry_task.entry_task.exceptions.ProductNotActiveException;
+import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.order.dto.*;
 import com.entry_task.entry_task.order.entity.Order;
 import com.entry_task.entry_task.order.entity.OrderItem;
@@ -15,16 +16,20 @@ import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.order.repository.OrderItemRepository;
 import com.entry_task.entry_task.order.repository.OrderRepository;
 import com.entry_task.entry_task.order.specifications.OrderSpecifications;
+import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.user.entity.User;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,16 +38,19 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final AuthService authService;
     private final CartService cartService;
+    private final ProductService productService;
 
-    public OrderService(OrderItemRepository orderItemRepository, OrderRepository orderRepository, AuthService authService, CartService cartService) {
+    public OrderService(OrderItemRepository orderItemRepository, OrderRepository orderRepository, AuthService authService, CartService cartService, ProductService productService) {
         this.orderItemRepository = orderItemRepository;
         this.orderRepository = orderRepository;
         this.authService = authService;
         this.cartService = cartService;
+        this.productService = productService;
     }
 
     @Transactional
     @PreAuthorize("hasRole('USER')")
+    @Retryable(retryFor = {OptimisticLockException.class})
     public OrderResponse createOrder(CreateOrderRequest request) {
 
         User user = authService.getCurrentUser();
@@ -69,8 +77,10 @@ public class OrderService {
         );
     }
 
-    private static Order getOrder(User user, List<CartItem> cartItems) {
+    private Order getOrder(User user, List<CartItem> cartItems) {
         Order order = new Order(user);
+
+        List<Product> updatedProducts = new ArrayList<>();
 
         for (CartItem item : cartItems) {
             Product product = item.getProduct();
@@ -93,7 +103,10 @@ public class OrderService {
             order.addItem(orderItem);
 
             product.setStock(product.getStock() - item.getQuantity());
+            updatedProducts.add(product);
         }
+
+        productService.batchUpdate(updatedProducts);
 
         order.recalculateTotal();
         return order;
