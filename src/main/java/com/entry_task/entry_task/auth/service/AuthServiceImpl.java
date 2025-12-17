@@ -7,6 +7,8 @@ import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
 import com.entry_task.entry_task.security.JwtUtil;
 import com.entry_task.entry_task.user.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +23,8 @@ import java.util.Map;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final UserRepository userRepository;
     private final UserService userService;
@@ -61,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtUtil.generateToken(userDetails.getUsername());
         long userId = userService.getIdByUsername(userDetails.getUsername());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userId);
-
+        log.info("User logged in successfully: userId={}", userId);
         return Map.of(
                 "accessToken", accessToken,
                 "refreshToken", refreshToken.getToken()

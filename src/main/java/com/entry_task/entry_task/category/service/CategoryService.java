@@ -1,5 +1,6 @@
 package com.entry_task.entry_task.category.service;
 
+import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.category.dto.CreateCategoryRequest;
 import com.entry_task.entry_task.category.dto.DeleteCategoryRequest;
 import com.entry_task.entry_task.exceptions.CategoryAlreadyExistsException;
@@ -7,6 +8,8 @@ import com.entry_task.entry_task.exceptions.CategoryNotFoundException;
 import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +18,7 @@ import java.util.Set;
 
 @Service
 public class CategoryService {
+    private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
 
     private final CategoryRepository categoryRepository;
 
@@ -28,6 +32,7 @@ public class CategoryService {
         category.setName(createCategoryRequest.name());
         try {
             categoryRepository.save(category);
+            log.info("Category created: categoryId={}", category.getId());
         } catch (DataIntegrityViolationException e) {
             throw new CategoryAlreadyExistsException("Category with name '" + createCategoryRequest.name() + "' already exists");
         }
@@ -41,6 +46,7 @@ public class CategoryService {
 
         categoryRepository.deleteCategoryAssociations(category.getId());
         categoryRepository.delete(category);
+        log.info("Category deleted: categoryId={}", category.getId());
     }
 
     public Set<Category> loadCategories(Set<Long> categoryIds) {

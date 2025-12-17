@@ -1,6 +1,7 @@
 package com.entry_task.entry_task.order.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
+import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.cart.entity.CartItem;
 import com.entry_task.entry_task.cart.service.CartService;
 import com.entry_task.entry_task.common.dto.Metadata;
@@ -20,6 +21,8 @@ import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.user.entity.User;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,14 +37,15 @@ import java.util.List;
 
 @Service
 public class OrderService {
-    private final OrderItemRepository orderItemRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
     private final AuthService authService;
     private final CartService cartService;
     private final ProductService productService;
 
-    public OrderService(OrderItemRepository orderItemRepository, OrderRepository orderRepository, AuthService authService, CartService cartService, ProductService productService) {
-        this.orderItemRepository = orderItemRepository;
+    public OrderService(OrderRepository orderRepository, AuthService authService, CartService cartService, ProductService productService) {
         this.orderRepository = orderRepository;
         this.authService = authService;
         this.cartService = cartService;
@@ -54,7 +58,7 @@ public class OrderService {
     public OrderResponse createOrder(CreateOrderRequest request) {
 
         User user = authService.getCurrentUser();
-
+        log.info("User {} has initiated a order for cart items {}", user.getId(), request.cartItemIds());
         List<CartItem> cartItems =
                 cartService.findAllCartItemsByIdAndUser(
                         request.cartItemIds(), user);
@@ -63,23 +67,15 @@ public class OrderService {
             throw new InvalidCartItemException("One or more cart items are invalid");
         }
 
-        Order order = getOrder(user, cartItems);
-        orderRepository.save(order);
+        log.debug("User {} cartItems: {}", user.getId(),
+                cartItems.stream()
+                        .map(item -> String.format("cartItemId = %d, productId=%d, quantity=%d",
+                                item.getCart().getId(),
+                                item.getProduct().getId(),
+                                item.getQuantity()))
+                        .toList());
 
-        cartService.deleteCartItems(cartItems);
-
-        return new OrderResponse(
-                order.getId(),
-                order.getStatus().name(),
-                order.getTotalAmount(),
-                order.getcTime(),
-                order.getmTime()
-        );
-    }
-
-    private Order getOrder(User user, List<CartItem> cartItems) {
         Order order = new Order(user);
-
         List<Product> updatedProducts = new ArrayList<>();
 
         for (CartItem item : cartItems) {
@@ -106,10 +102,22 @@ public class OrderService {
             updatedProducts.add(product);
         }
 
-        productService.batchUpdate(updatedProducts);
-
         order.recalculateTotal();
-        return order;
+
+        orderRepository.save(order);
+        productService.batchUpdate(updatedProducts);
+        cartService.deleteCartItems(cartItems);
+
+        log.info("Order {} successfully created by user {}. Total items: {}, Total amount: {}",
+                order.getId(), user.getId(), order.getItems().size(), order.getTotalAmount());
+
+        return new OrderResponse(
+                order.getId(),
+                order.getStatus().name(),
+                order.getTotalAmount(),
+                order.getcTime(),
+                order.getmTime()
+        );
     }
 
     @PreAuthorize("hasRole('USER')")
