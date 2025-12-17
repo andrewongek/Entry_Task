@@ -12,6 +12,7 @@ import com.entry_task.entry_task.product.dto.*;
 import com.entry_task.entry_task.product.repository.ProductRepository;
 import com.entry_task.entry_task.user.service.UserService;
 import com.entry_task.entry_task.product.specifications.ProductSpecifications;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,6 +20,8 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.category.entity.Category;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class ProductService {
@@ -148,6 +152,7 @@ public class ProductService {
             @CacheEvict(value = "product:info", key = "#productId")
     })
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @Retryable(retryFor = {OptimisticLockException.class})
     public void deactivateProduct(Long productId) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
@@ -160,6 +165,7 @@ public class ProductService {
             @CacheEvict(value = "product:info", key = "#productId")
     })
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @Retryable(retryFor = {OptimisticLockException.class})
     public void activateProduct(Long productId) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
@@ -172,6 +178,7 @@ public class ProductService {
             @CacheEvict(value = "product:info", key = "#productId")
     })
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @Retryable(retryFor = {OptimisticLockException.class})
     public void deleteProductById(Long productId) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
@@ -184,12 +191,40 @@ public class ProductService {
             @CacheEvict(value = "product:info", key = "#productId")
     })
     @PreAuthorize("hasRole('SELLER')")
+    @Retryable(retryFor = {OptimisticLockException.class})
     public void updateProductById(Long productId, UpdateProductRequest request) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
         updateProduct(product, request);
     }
 
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product:list", allEntries = true),
+            @CacheEvict(value = "product:info", key = "#product.id")
+    })
+    public void batchUpdate(List<Product> products) {
+        productRepository.saveAll(products);
+    }
+    /*
+    Limitations of current approach:
+    1. @CacheEvict(value = "product:list", allEntries = true)
+       - Clears the entire product list cache on every update.
+       - Makes caching ineffective if product updates are frequent.
+
+    2. @CacheEvict(value = "product:info", key = "#product.id") with a list
+       - Does not automatically handle multiple products.
+       - Spring SpEL cannot iterate over a collection, so some product caches may not be evicted properly in batch updates.
+
+    Future Solution – Static/Dynamic Caches:
+    1. Split caches into:
+       - product:static → fields that rarely change (name, description, seller, categories)
+       - product:dynamic → fields that change frequently (stock, price)
+
+    2. Eviction strategy:
+       - Evict only affected products from dynamic cache (`product:dynamic`) after updates.
+       - Keep static caches and product:list cache mostly intact unless bulk changes occur.
+    */
     // Private Functions
     private Product getProductById(long productId) {
         return productRepository.findById(productId)

@@ -17,3 +17,7 @@ databaseChangeLog:
       file: db/changelog/changes/008-create-orders-table.yaml
   - include:
       file: db/changelog/changes/009-create-order-items-table.yaml
+  - include:
+      file: db/changelog/changes/010-add-version-column-to-cart-tables.yaml
+  - include:
+      file: db/changelog/changes/011-add-version-column-to-products-table.yaml

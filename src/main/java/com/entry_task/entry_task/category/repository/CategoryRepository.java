@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    boolean existsByName(String name);
-
     @Modifying
     @Query(value = "DELETE FROM product_categories WHERE category_id = :categoryId", nativeQuery = true)
     void deleteCategoryAssociations(@Param("categoryId") Long categoryId);

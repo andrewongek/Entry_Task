@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-add-version-column-to-products-table
+      author: andrew
+      changes:
+        - addColumn:
+            tableName: products
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0

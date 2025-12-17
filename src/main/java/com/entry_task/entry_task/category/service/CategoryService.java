@@ -7,6 +7,7 @@ import com.entry_task.entry_task.exceptions.CategoryNotFoundException;
 import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -23,15 +24,14 @@ public class CategoryService {
 
     @Transactional
     public void createCategory(CreateCategoryRequest createCategoryRequest) {
-        if (categoryRepository.existsByName(createCategoryRequest.name())) {
-            throw new CategoryAlreadyExistsException(
-                    "Category with name '" + createCategoryRequest.name() + "' already exists"
-            );
-        }
         Category category = new Category();
         category.setName(createCategoryRequest.name());
+        try {
+            categoryRepository.save(category);
+        } catch (DataIntegrityViolationException e) {
+            throw new CategoryAlreadyExistsException("Category with name '" + createCategoryRequest.name() + "' already exists");
+        }
 
-        categoryRepository.save(category);
     }
 
     @Transactional

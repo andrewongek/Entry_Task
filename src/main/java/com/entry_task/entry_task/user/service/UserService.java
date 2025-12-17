@@ -34,7 +34,7 @@ public class UserService {
     }
 
     private void register(RegisterRequest registerRequest) {
-        User newUser = new User(registerRequest.username(), passwordEncoder.encode(registerRequest.password()), registerRequest.email(), registerRequest.role());
+        User newUser = new User(registerRequest.username(), registerRequest.email(), passwordEncoder.encode(registerRequest.password()), registerRequest.role());
         userRepository.save(newUser);
     }
 
