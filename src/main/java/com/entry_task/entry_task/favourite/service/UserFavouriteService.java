@@ -1,6 +1,7 @@
 package com.entry_task.entry_task.favourite.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
+import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.FavouriteNotFoundException;
 import com.entry_task.entry_task.exceptions.ProductAlreadyFavouritedException;
@@ -13,6 +14,8 @@ import com.entry_task.entry_task.product.dto.ProductListing;
 import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.favourite.repository.UserFavouriteRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,9 @@ import java.util.Optional;
 
 @Service
 public class UserFavouriteService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserFavouriteService.class);
+
     private final UserFavouriteRepository userFavouriteRepository;
     private final ProductService productService;
     private final AuthService authService;
@@ -46,6 +52,7 @@ public class UserFavouriteService {
             throw new ProductAlreadyFavouritedException();
         }
         setUserFavourite(user, product);
+        log.debug("User add to favourite: userId={}, productId={}", user.getId(), product.getId());
     }
 
     @Transactional
@@ -58,6 +65,7 @@ public class UserFavouriteService {
         }
         UserFavourite userFavourite = userFavouriteRepository.findByUserIdAndProductId(user.getId(), product.getId()).orElseThrow(() -> new FavouriteNotFoundException("Product is already not favourited by User"));
         deleteUserFavourite(userFavourite);
+        log.debug("User removed favourite: userId={}, productId={}", user.getId(), product.getId());
     }
 
 

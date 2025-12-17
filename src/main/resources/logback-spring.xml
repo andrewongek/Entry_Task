@@ -1,9 +1,7 @@
 <configuration>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <includeContext>false</includeContext>
-            <includeMdc>true</includeMdc>
-        </encoder>ledfeefef
+        </encoder>
     </appender>
 
     <root level="INFO">

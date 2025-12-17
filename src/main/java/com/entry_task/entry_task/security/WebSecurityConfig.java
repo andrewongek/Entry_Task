@@ -36,12 +36,6 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring()
-                .requestMatchers("/favicon.ico", "/static/**", "/css/**", "/js/**", "/swagger-ui/**", "/v3/api-docs*/**");
-    }
-
-    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Updated configuration for Spring Security 6.x
         http
@@ -55,7 +49,7 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/api/test/**", "/actuator/**", "/swagger-ui/**", "/v3/api-docs*/**").permitAll()
                                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                                 .requestMatchers("/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**").hasRole("USER")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")

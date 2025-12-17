@@ -1,6 +1,7 @@
 package com.entry_task.entry_task.product.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
+import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.category.service.CategoryService;
 import com.entry_task.entry_task.common.dto.Metadata;
 import com.entry_task.entry_task.enums.ProductStatus;
@@ -14,6 +15,8 @@ import com.entry_task.entry_task.user.service.UserService;
 import com.entry_task.entry_task.product.specifications.ProductSpecifications;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -33,6 +36,8 @@ import java.util.List;
 
 @Service
 public class ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final AuthService authService;
     private final UserService userService;
@@ -133,9 +138,12 @@ public class ProductService {
 
     @Transactional
     @CacheEvict(value = "product:list", allEntries = true)
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasRole('SELLER')")
     public Long createProduct(CreateProductRequest request) {
-        return createProduct(request, authService.getCurrentUser());
+        User user = authService.getCurrentUser();
+        Long productId = createProduct(request, user);
+        log.info("Seller: {} successfully created product: {}", user.getId(), productId);
+        return productId;
     }
 
     @Transactional
@@ -143,7 +151,9 @@ public class ProductService {
     @PreAuthorize("hasRole('ADMIN')")
     public Long createProductAdmin(CreateProductRequest request, Long sellerId) {
         User user = userService.findUserBySellerId(sellerId);
-        return createProduct(request, user);
+        Long productId = createProduct(request, user);
+        log.info("Admin successfully created product: {}", productId);
+        return productId;
     }
 
     @Transactional
@@ -151,12 +161,13 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void deactivateProduct(Long productId) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
         setProductStatus(productId, ProductStatus.INACTIVE);
+        log.info("Admin deactivated product: {}", productId);
     }
 
     @Transactional
@@ -164,12 +175,13 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void activateProduct(Long productId) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
         setProductStatus(productId, ProductStatus.ACTIVE);
+        log.info("Admin activated product: {}", productId);
     }
 
     @Transactional
@@ -177,12 +189,13 @@ public class ProductService {
             @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:info", key = "#productId")
     })
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasRole('SELLER')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void deleteProductById(Long productId) {
         Product product = getProductById(productId);
         validateProductOwnership(product);
         setProductStatus(productId, ProductStatus.DELETED);
+        log.info("Seller deleted product: {}", productId);
     }
 
     @Transactional
@@ -196,6 +209,7 @@ public class ProductService {
         Product product = getProductById(productId);
         validateProductOwnership(product);
         updateProduct(product, request);
+        log.info("Seller updated product: {}", productId);
     }
 
     @Transactional
@@ -206,6 +220,7 @@ public class ProductService {
     public void batchUpdate(List<Product> products) {
         productRepository.saveAll(products);
     }
+
     /*
     Limitations of current approach:
     1. @CacheEvict(value = "product:list", allEntries = true)
