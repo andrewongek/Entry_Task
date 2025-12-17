@@ -6,11 +6,13 @@ import com.entry_task.entry_task.product.dto.ProductListRequest;
 import com.entry_task.entry_task.product.dto.ProductListResponse;
 import com.entry_task.entry_task.product.dto.ProductListing;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Favourites", description = "Endpoints for managing user favourite products")
+@Validated
 @RestController
 @RequestMapping("/api/favourites")
 public class FavouriteController {

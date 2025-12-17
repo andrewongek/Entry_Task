@@ -6,14 +6,14 @@ import com.entry_task.entry_task.cart.dto.CartResponse;
 import com.entry_task.entry_task.cart.dto.UpdateCartRequest;
 import com.entry_task.entry_task.cart.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Cart", description = "Endpoints for viewing and updating user's cart")
+@Validated
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {

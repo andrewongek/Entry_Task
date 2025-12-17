@@ -33,10 +33,13 @@ public class SwaggerConfig {
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .tags(List.of(
                         new Tag().name("Auth").description("Operations related to authentication"),
-                        new Tag().name("Product").description("Operations related to products"),
+                        new Tag().name("User Product").description("User operations related to products"),
+                        new Tag().name("Seller Product").description("Seller operations related to products"),
+                        new Tag().name("Admin Product").description("Admin operations related to products"),
                         new Tag().name("Cart").description("Operations related to shopping cart"),
                         new Tag().name("Order").description("Operations related to orders"),
-                        new Tag().name("Favourite").description("Operations related to favourites")
+                        new Tag().name("Favourite").description("Operations related to favourites"),
+                        new Tag().name("Category").description("Admin operations related to category")
                 ));
     }
 }

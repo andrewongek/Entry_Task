@@ -1,10 +1,12 @@
 package com.entry_task.entry_task.category.service;
 
 import com.entry_task.entry_task.category.dto.CreateCategoryRequest;
+import com.entry_task.entry_task.category.dto.DeleteCategoryRequest;
 import com.entry_task.entry_task.exceptions.CategoryAlreadyExistsException;
 import com.entry_task.entry_task.exceptions.CategoryNotFoundException;
 import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.repository.CategoryRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -19,6 +21,7 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
+    @Transactional
     public void createCategory(CreateCategoryRequest createCategoryRequest) {
         if (categoryRepository.existsByName(createCategoryRequest.name())) {
             throw new CategoryAlreadyExistsException(
@@ -31,13 +34,12 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
-    public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException(id));
+    @Transactional
+    public void deleteCategory(DeleteCategoryRequest request) {
+        Category category = categoryRepository.findById(request.id())
+                .orElseThrow(() -> new CategoryNotFoundException(request.id()));
 
-        category.getProducts().forEach(product -> product.getCategories().remove(category));
-        category.getProducts().clear();
-
+        categoryRepository.deleteCategoryAssociations(category.getId());
         categoryRepository.delete(category);
     }
 
