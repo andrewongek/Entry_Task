@@ -43,6 +43,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
             """)
     List<CartItem> findAllByIdAndUser(
             @Param("ids") List<Long> ids,
-            @Param("user") User user
+            @Param("user") User customer
     );
 }

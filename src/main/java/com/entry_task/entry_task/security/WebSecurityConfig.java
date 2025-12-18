@@ -51,7 +51,7 @@ public class WebSecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/api/test/**", "/actuator/**", "/swagger-ui/**", "/v3/api-docs*/**").permitAll()
                                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
-                                .requestMatchers("/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**").hasRole("USER")
+                                .requestMatchers("/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**").hasRole("CUSTOMER")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")
                                 .requestMatchers("/api/test/admin", "/api/admin/**", "/api/auth/admin/**", "/api/category/**").hasRole("ADMIN")
                                 .anyRequest().denyAll()

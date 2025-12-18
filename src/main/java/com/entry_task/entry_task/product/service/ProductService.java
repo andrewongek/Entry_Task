@@ -322,16 +322,17 @@ public class ProductService {
 
     private Long createProduct(CreateProductRequest request, User seller) {
         long now = Instant.now().getEpochSecond();
-        Product newProduct = new Product();
-        newProduct.setName(request.name());
-        newProduct.setSeller(seller);
-        newProduct.setPrice(request.price());
-        newProduct.setStock(request.stock());
-        newProduct.setDescription(request.description());
-        newProduct.setProductStatus(ProductStatus.ACTIVE);
-        newProduct.setcTime(now);
-        newProduct.setmTime(now);
-        newProduct.setCategories(categoryService.loadCategories(request.categoryIds()));
+        Product newProduct = new Product(
+                request.name(),
+                seller,
+                request.stock(),
+                request.price(),
+                categoryService.loadCategories(request.categoryIds()),
+                request.description(),
+                ProductStatus.ACTIVE,
+                now,
+                now
+        );
         return productRepository.save(newProduct).getId();
     }
 

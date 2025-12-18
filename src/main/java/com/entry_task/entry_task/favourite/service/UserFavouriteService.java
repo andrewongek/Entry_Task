@@ -1,7 +1,6 @@
 package com.entry_task.entry_task.favourite.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.FavouriteNotFoundException;
 import com.entry_task.entry_task.exceptions.ProductAlreadyFavouritedException;
@@ -37,13 +36,13 @@ public class UserFavouriteService {
         this.authService = authService;
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ProductListResponse<ProductListing> getUserFavouriteProductListingList(ProductListRequest request) {
         return productService.getUserFavouriteProductListingList(request);
     }
 
     @Transactional
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public void setUserFavouriteByProductId(Long productId) {
         Product product = productService.getActiveProductById(productId);
         User user = authService.getCurrentUser();
@@ -56,13 +55,10 @@ public class UserFavouriteService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public void deleteUserFavouriteByProductId(Long productId) {
         Product product = productService.getActiveProductById(productId);
         User user = authService.getCurrentUser();
-        if (user.getRole() != Role.USER) {
-            throw new AccessDeniedException("Only normal users can favourite products");
-        }
         UserFavourite userFavourite = userFavouriteRepository.findByUserIdAndProductId(user.getId(), product.getId()).orElseThrow(() -> new FavouriteNotFoundException("Product is already not favourited by User"));
         deleteUserFavourite(userFavourite);
         log.debug("User removed favourite: userId={}, productId={}", user.getId(), product.getId());
@@ -70,9 +66,7 @@ public class UserFavouriteService {
 
 
     private void setUserFavourite(User user, Product product) {
-        UserFavourite userFavourite = new UserFavourite();
-        userFavourite.setUser(user);
-        userFavourite.setProduct(product);
+        UserFavourite userFavourite = new UserFavourite(user, product);
         userFavouriteRepository.save(userFavourite);
     }
 

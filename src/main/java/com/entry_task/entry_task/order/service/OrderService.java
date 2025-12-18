@@ -60,7 +60,7 @@ public class OrderService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public OrderResponse createOrder(CreateOrderRequest request) {
 
@@ -127,7 +127,7 @@ public class OrderService {
         );
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public OrderListResponse getUserOrdersList(OrderListRequest request) {
         User currentUser = authService.getCurrentUser();
         Page<OrderSummary> page = getUserOrdersList(request, currentUser.getId());

@@ -2,6 +2,7 @@ package com.entry_task.entry_task.product.entity;
 
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.category.entity.Category;
+import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.user.entity.User;
 import jakarta.persistence.*;
 
@@ -48,6 +49,23 @@ public class Product {
 
     @Version
     private Long version;
+
+
+    protected Product() {
+        // for JPA only
+    }
+
+    public Product(String name, User seller, int stock, int price, Set<Category> categories, String description, ProductStatus productStatus, Long cTime, Long mTime) {
+        this.name = name;
+        this.seller = seller;
+        this.stock = stock;
+        this.price = price;
+        this.categories = categories;
+        this.description = description;
+        this.productStatus = productStatus;
+        this.cTime = cTime;
+        this.mTime = mTime;
+    }
 
     public long getId() {
         return id;

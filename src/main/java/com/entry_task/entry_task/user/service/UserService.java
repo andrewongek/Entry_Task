@@ -27,7 +27,7 @@ public class UserService {
         this.userRegistrationValidator = userRegistrationValidator;
     }
 
-    @PreAuthorize("hasAnyRole('SELLER', 'USER')")
+    @PreAuthorize("hasAnyRole('SELLER', 'CUSTOMER')")
     public void registerUser(RegisterRequest registerRequest) {
         userRegistrationValidator.validateRegistrationRequest(registerRequest);
         register(registerRequest);

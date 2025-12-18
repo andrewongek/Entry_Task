@@ -39,7 +39,7 @@ public class CartService {
         this.authService = authService;
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public CartResponse getCart() {
         User currentUser = authService.getCurrentUser();
         List<CartItemProjection> projections = cartItemRepository.findCartItemProjections(currentUser.getId());
@@ -67,24 +67,24 @@ public class CartService {
                 items.isEmpty() ? null : projections.get(0).getCartUpdatedAt());
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     @Transactional
     @Retryable(retryFor = {OptimisticLockException.class})
     public String addProductToCart(UpdateCartRequest request) {
-        User user = authService.getCurrentUser();
+        User customer = authService.getCurrentUser();
 
         if (request.quantity() == 0) {
-            return deleteProductFromCart(user.getId(), request.productId());
+            return deleteProductFromCart(customer.getId(), request.productId());
         }
 
         Product product = productService.getActiveProductById(request.productId());
         if (product.getStock() <= 0 || request.quantity() > product.getStock()) {
             throw new InsufficientStockException("Insufficient stock for product: " + product.getId());
         }
-        Cart cart = cartRepository.findByUserId(user.getId()).orElseGet(() -> {
+        Cart cart = cartRepository.findByUserId(customer.getId()).orElseGet(() -> {
             long now = Instant.now().getEpochSecond();
             Cart newCart = new Cart();
-            newCart.setUser(user);
+            newCart.setUser(customer);
             newCart.setcTime(now);
             newCart.setmTime(now);
             return cartRepository.save(newCart);
