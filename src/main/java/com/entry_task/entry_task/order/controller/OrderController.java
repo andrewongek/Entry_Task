@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Orders", description = "Endpoints for order checkout and order retrieval")
+@Tag(name = "User Order", description = "Endpoints for order checkout and order retrieval")
 @Validated
 @RestController
 @RequestMapping("/api/orders")
@@ -39,7 +39,7 @@ public class OrderController {
             description = "Retrieves a list of orders for the authenticated user, filtered and paginated according to the request."
     )
     @PostMapping("/search")
-    public ResponseEntity<CustomApiResponse<OrderListResponse>> getUserOrdersList(@Valid @RequestBody OrderListRequest request) {
+    public ResponseEntity<CustomApiResponse<OrderListResponse>> getUserOrdersList(@RequestBody OrderListRequest request) {
         OrderListResponse response = orderService.getUserOrdersList(request);
         return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
     }
