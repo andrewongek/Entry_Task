@@ -49,7 +49,7 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/test/**", "/actuator/**", "/swagger-ui/**", "/v3/api-docs*/**").permitAll()
+                                .requestMatchers("/api/test/**", "/actuator/**", "/swagger-ui/**", "/v3/api-docs*/**", "/h2-console").permitAll()
                                 .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                                 .requestMatchers("/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**").hasRole("CUSTOMER")
                                 .requestMatchers("/api/test/seller", "/api/seller/**").hasRole("SELLER")

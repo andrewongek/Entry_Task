@@ -44,7 +44,6 @@ public class CategoryService {
         Category category = categoryRepository.findById(request.id())
                 .orElseThrow(() -> new CategoryNotFoundException(request.id()));
 
-        categoryRepository.deleteCategoryAssociations(category.getId());
         categoryRepository.delete(category);
         log.info("Category deleted: categoryId={}", category.getId());
     }
