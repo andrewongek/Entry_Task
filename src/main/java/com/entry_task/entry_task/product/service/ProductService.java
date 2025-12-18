@@ -73,7 +73,7 @@ public class ProductService {
 
     @Cacheable(
             value = "product:list",
-            key = "T(java.util.Objects).hash(#request, #sellerId)"
+            keyGenerator = "sha256KeyGenerator"
     )
     public ProductListResponse<ProductListing> getUserProductListingList(ProductListRequest request, Long sellerId) {
         if (sellerId != null && sellerId > 0) {

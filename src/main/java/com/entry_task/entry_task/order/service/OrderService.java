@@ -13,6 +13,7 @@ import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.order.dto.*;
 import com.entry_task.entry_task.order.entity.Order;
 import com.entry_task.entry_task.order.entity.OrderItem;
+import com.entry_task.entry_task.order.specifications.OrderItemSpecifications;
 import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.order.repository.OrderItemRepository;
 import com.entry_task.entry_task.order.repository.OrderRepository;
@@ -23,6 +24,8 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,15 +44,19 @@ public class OrderService {
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final AuthService authService;
     private final CartService cartService;
     private final ProductService productService;
+    private final OrderInvoiceCacheService orderInvoiceCacheService;
 
-    public OrderService(OrderRepository orderRepository, AuthService authService, CartService cartService, ProductService productService) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AuthService authService, CartService cartService, ProductService productService, OrderInvoiceCacheService orderInvoiceCacheService) {
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.authService = authService;
         this.cartService = cartService;
         this.productService = productService;
+        this.orderInvoiceCacheService = orderInvoiceCacheService;
     }
 
     @Transactional
@@ -185,6 +192,71 @@ public class OrderService {
                 order.getcTime(),
                 order.getmTime()
         );
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    public OrderInvoiceItemListResponse getSellerOrderInvoiceItemList(SellerOrderInvoiceItemListRequest request) {
+        return orderInvoiceCacheService.getSellerOrderInvoiceItemList(request, authService.getCurrentUser().getId());
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public OrderInvoiceItemListResponse getOrderInvoiceItemList(AdminOrderInvoiceItemListRequest request) {
+        Sort.Direction sortDirection =
+                Sort.Direction.fromString(request.sort().order());
+
+        Pageable pageable = PageRequest.of(
+                request.pagination().page(),
+                request.pagination().size(),
+                Sort.by(sortDirection, request.sort().field())
+        );
+
+        Specification<OrderItem> spec = Specification.unrestricted();
+        if (request.sellerId() != null) {
+            return orderInvoiceCacheService.getSellerOrderInvoiceItemList(new SellerOrderInvoiceItemListRequest(request.pagination(), request.filter(), request.sort()), request.sellerId());
+        }
+        if (request.filter() != null) {
+            if (request.filter().keyword() != null && !request.filter().keyword().isBlank()) {
+                spec = spec.and(OrderItemSpecifications.productNameContains(request.filter().keyword()));
+            }
+            if (request.filter().userId() != null) {
+                spec = spec.and(OrderItemSpecifications.userIdEquals(request.filter().userId()));
+            }
+            if (request.filter().orderId() != null) {
+                spec = spec.and(OrderItemSpecifications.orderIdEquals(request.filter().orderId()));
+            }
+            if (request.filter().orderItemId() != null) {
+                spec = spec.and(OrderItemSpecifications.orderItemIdEquals(request.filter().orderItemId()));
+            }
+            if (request.filter().statuses() != null && !request.filter().statuses().isEmpty()) {
+                spec = spec.and(OrderItemSpecifications.orderStatusIn(request.filter().statuses()));
+            }
+        }
+
+        Page<OrderInvoiceItemResponse> page = orderItemRepository.findAll(spec, pageable).map(orderItem -> new OrderInvoiceItemResponse(
+                orderItem.getId(),
+                orderItem.getOrder().getId(),
+                orderItem.getOrder().getId(),
+                orderItem.getProduct().getId(),
+                orderItem.getProduct().getName(),
+                orderItem.getQuantity(),
+                orderItem.getPrice(),
+                orderItem.getQuantity() * orderItem.getPrice(),
+                orderItem.getOrder().getStatus().name(),
+                orderItem.getOrder().getcTime(),
+                orderItem.getOrder().getmTime()
+        ));
+
+        return new OrderInvoiceItemListResponse(
+                page.toList(),
+                new Metadata(
+                        page.getTotalElements(),
+                        page.getNumber(),
+                        page.getSize(),
+                        page.hasNext()
+                )
+        );
+
     }
 }
 

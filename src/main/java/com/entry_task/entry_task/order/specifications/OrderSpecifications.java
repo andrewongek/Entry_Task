@@ -5,7 +5,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
-public class OrderSpecifications {
+public class  OrderSpecifications {
 
     public static Specification<Order> belongsToUser(Long userId) {
         return (root, query, cb) ->
