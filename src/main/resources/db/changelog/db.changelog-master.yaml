@@ -21,3 +21,6 @@ databaseChangeLog:
       file: db/changelog/changes/010-add-version-column-to-cart-tables.yaml
   - include:
       file: db/changelog/changes/011-add-version-column-to-products-table.yaml
+  - include:
+      file: db/changelog/changes/012-add-fk-on-delete-cascade-categories.yaml
+

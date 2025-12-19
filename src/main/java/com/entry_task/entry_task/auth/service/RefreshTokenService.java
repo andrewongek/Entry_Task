@@ -24,10 +24,11 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(Long userId) {
-        var token = new RefreshToken();
-        token.setUser(userService.getUserById(userId));
-        token.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        token.setToken(UUID.randomUUID().toString());
+        var token = new RefreshToken(
+                userService.getUserById(userId),
+                UUID.randomUUID().toString(),
+                Instant.now().plusMillis(refreshTokenDurationMs)
+        );
         return refreshTokenRepository.save(token);
     }
 

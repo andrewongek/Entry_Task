@@ -11,6 +11,7 @@ import java.util.List;
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -28,6 +29,16 @@ public class Cart {
 
     @Version
     private Long version;
+
+    protected Cart() {
+        // for JPA only
+    }
+    
+    public Cart(User user, Long cTime, Long mTime) {
+        this.user = user;
+        this.cTime = cTime;
+        this.mTime = mTime;
+    }
 
     public Long getId() {
         return id;

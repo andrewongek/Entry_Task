@@ -28,8 +28,7 @@ public class CategoryService {
 
     @Transactional
     public void createCategory(CreateCategoryRequest createCategoryRequest) {
-        Category category = new Category();
-        category.setName(createCategoryRequest.name());
+        Category category = new Category(createCategoryRequest.name());
         try {
             categoryRepository.save(category);
             log.info("Category created: categoryId={}", category.getId());
@@ -44,7 +43,6 @@ public class CategoryService {
         Category category = categoryRepository.findById(request.id())
                 .orElseThrow(() -> new CategoryNotFoundException(request.id()));
 
-        categoryRepository.deleteCategoryAssociations(category.getId());
         categoryRepository.delete(category);
         log.info("Category deleted: categoryId={}", category.getId());
     }

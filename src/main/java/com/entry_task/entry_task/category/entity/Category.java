@@ -22,6 +22,14 @@ public class Category {
             cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<Product> products = new HashSet<>();
 
+    protected Category(){
+
+    }
+
+    public Category(String name) {
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }

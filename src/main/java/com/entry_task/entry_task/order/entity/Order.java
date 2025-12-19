@@ -44,7 +44,7 @@ public class Order {
     private Long mTime;
 
     public Order(User user) {
-        Long now = Instant.now().getEpochSecond();
+        long now = Instant.now().getEpochSecond();
         this.user = user;
         this.status = OrderStatus.CREATED;
         this.cTime = now;

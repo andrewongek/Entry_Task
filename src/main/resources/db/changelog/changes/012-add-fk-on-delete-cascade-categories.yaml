@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: drop-fk-product-categories-category
+      author: andrew
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: product_categories
+            constraintName: fk_pc_category
+
+  - changeSet:
+      id: add-fk-product-categories-category-cascade
+      author: andrew
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: product_categories
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_pc_category
+            onDelete: CASCADE

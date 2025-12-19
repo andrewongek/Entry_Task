@@ -23,12 +23,11 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expiryDate;
 
-    public RefreshToken() {
+    protected RefreshToken() {
 
     }
 
-    public RefreshToken(Long id, User user, String token, Instant expiryDate) {
-        this.id = id;
+    public RefreshToken(User user, String token, Instant expiryDate) {
         this.user = user;
         this.token = token;
         this.expiryDate = expiryDate;

@@ -1,6 +1,7 @@
 package com.entry_task.entry_task.cart.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
+import com.entry_task.entry_task.cart.dto.CartItemDto;
 import com.entry_task.entry_task.cart.dto.CartItemResponse;
 import com.entry_task.entry_task.cart.dto.CartResponse;
 import com.entry_task.entry_task.cart.dto.UpdateCartRequest;
@@ -14,7 +15,6 @@ import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.product.dto.ProductListing;
 import com.entry_task.entry_task.cart.repository.CartItemRepository;
 import com.entry_task.entry_task.cart.repository.CartRepository;
-import com.entry_task.entry_task.cart.repository.projections.CartItemProjection;
 import com.entry_task.entry_task.product.service.ProductService;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
@@ -39,21 +39,23 @@ public class CartService {
         this.authService = authService;
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public CartResponse getCart() {
         User currentUser = authService.getCurrentUser();
-        List<CartItemProjection> projections = cartItemRepository.findCartItemProjections(currentUser.getId());
-        List<CartItemResponse> items = projections.stream()
-                .map(p -> new CartItemResponse(
-                        p.getCartItemId(),
-                        p.getQuantity(),
+        List<CartItemDto> cartItems = cartItemRepository.findCartItemDtos(currentUser.getId());
+        List<CartItemResponse> items = cartItems.stream()
+                .map(dto -> new CartItemResponse(
+                        dto.cartItemId(),
+                        dto.quantity(),
                         new ProductListing(
-                                p.getProductId(),
-                                p.getProductName(),
-                                p.getSellerId(),
-                                p.getProductStock(),
-                                p.getProductPrice()),
-                        p.getSubTotalPrice()))
+                                dto.productId(),
+                                dto.productName(),
+                                dto.sellerId(),
+                                dto.productStock(),
+                                dto.productPrice()
+                        ),
+                        dto.subTotalPrice()
+                ))
                 .toList();
         return new CartResponse(
                 items.size(),
@@ -64,40 +66,32 @@ public class CartService {
                         .mapToInt(CartItemResponse::subTotalPrice)
                         .sum(),
                 items,
-                items.isEmpty() ? null : projections.get(0).getCartUpdatedAt());
+                items.isEmpty() ? null : cartItems.get(0).cartUpdatedAt());
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     @Transactional
     @Retryable(retryFor = {OptimisticLockException.class})
     public String addProductToCart(UpdateCartRequest request) {
-        User user = authService.getCurrentUser();
+        User customer = authService.getCurrentUser();
 
         if (request.quantity() == 0) {
-            return deleteProductFromCart(user.getId(), request.productId());
+            return deleteProductFromCart(customer.getId(), request.productId());
         }
 
         Product product = productService.getActiveProductById(request.productId());
         if (product.getStock() <= 0 || request.quantity() > product.getStock()) {
             throw new InsufficientStockException("Insufficient stock for product: " + product.getId());
         }
-        Cart cart = cartRepository.findByUserId(user.getId()).orElseGet(() -> {
+        Cart cart = cartRepository.findByUserId(customer.getId()).orElseGet(() -> {
             long now = Instant.now().getEpochSecond();
-            Cart newCart = new Cart();
-            newCart.setUser(user);
-            newCart.setcTime(now);
-            newCart.setmTime(now);
+            Cart newCart = new Cart(customer, now, now);
             return cartRepository.save(newCart);
         });
 
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()).orElseGet(() -> {
             long now = Instant.now().getEpochSecond();
-            CartItem newCartItem = new CartItem();
-            newCartItem.setCart(cart);
-            newCartItem.setProduct(product);
-            newCartItem.setCTime(now);
-            newCartItem.setMTime(now);
-            return newCartItem;
+            return new CartItem(cart, product, 1, now, now);
         });
 
         cartItem.setQuantity(request.quantity());

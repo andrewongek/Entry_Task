@@ -23,6 +23,13 @@ public class UserFavourite {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    protected UserFavourite(){};
+
+    public UserFavourite(User user, Product product) {
+        this.user = user;
+        this.product = product;
+    }
+
     public Long getId() {
         return id;
     }

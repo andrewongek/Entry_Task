@@ -25,7 +25,7 @@ public record RegisterRequest(
         String email,
 
         @NotNull(message = "Role is required")
-        @Schema(description = "Role of the user", example = "USER")
+        @Schema(description = "Role of the user", example = "CUSTOMER")
         Role role
 ) {
 }

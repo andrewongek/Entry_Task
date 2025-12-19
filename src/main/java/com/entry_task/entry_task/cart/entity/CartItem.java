@@ -33,6 +33,18 @@ public class CartItem {
     @Version
     private Long version;
 
+    protected CartItem() {
+        // for JPA only
+    }
+
+    public CartItem(Cart cart, Product product, int quantity, Long cTime, Long mTime) {
+        this.cart = cart;
+        this.product = product;
+        this.quantity = quantity;
+        this.cTime = cTime;
+        this.mTime = mTime;
+    }
+
     public Long getId() {
         return id;
     }
