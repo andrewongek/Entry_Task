@@ -1,5 +1,6 @@
 package com.entry_task.entry_task.common;
 
+import com.entry_task.entry_task.auth.entity.RefreshToken;
 import com.entry_task.entry_task.cart.entity.Cart;
 import com.entry_task.entry_task.cart.entity.CartItem;
 import com.entry_task.entry_task.category.entity.Category;
@@ -12,6 +13,7 @@ import com.entry_task.entry_task.user.entity.User;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class TestEntityFactory {
     public static User createCustomer(String username) {
@@ -71,4 +73,12 @@ public class TestEntityFactory {
         return new CartItem(cart, product, quantity, ctime, mtime);
     }
 
+    public static RefreshToken createRefreshToken(User user) {
+        return createRefreshToken(user, UUID.randomUUID().toString(), Instant.now().plusMillis(86400000));
+    }
+
+
+    public static RefreshToken createRefreshToken (User user, String token, Instant expiryDate) {
+        return new RefreshToken(user, token, expiryDate);
+    }
 }
