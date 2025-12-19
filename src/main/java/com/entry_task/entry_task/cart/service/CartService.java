@@ -91,7 +91,7 @@ public class CartService {
 
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()).orElseGet(() -> {
             long now = Instant.now().getEpochSecond();
-            return new CartItem(cart, product, 0, now, now);
+            return new CartItem(cart, product, 1, now, now);
         });
 
         cartItem.setQuantity(request.quantity());

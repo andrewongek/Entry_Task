@@ -51,11 +51,11 @@ public class TestEntityFactory {
         );
     }
 
-    public static UserFavourite createUserFavourite(User user, Product product){
+    public static UserFavourite createUserFavourite(User user, Product product) {
         return new UserFavourite(user, product);
     }
 
-    public static Cart createEmptyCart(User customer){
+    public static Cart createEmptyCart(User customer) {
         long now = Instant.now().getEpochSecond();
         return createCart(customer, now, now);
     }
@@ -64,12 +64,16 @@ public class TestEntityFactory {
         return new Cart(customer, cTime, mTime);
     }
 
-    public static CartItem createCartItem (Cart cart, Product product) {
-        long now = Instant.now().getEpochSecond();
-        return createCartItem(cart, product, 10, now, now);
+    public static CartItem createCartItem(Cart cart, Product product) {
+        return createCartItem(cart, product, 2);
     }
 
-    public static CartItem createCartItem (Cart cart, Product product, int quantity, Long ctime, Long mtime) {
+    public static CartItem createCartItem(Cart cart, Product product, int quantity) {
+        long now = Instant.now().getEpochSecond();
+        return createCartItem(cart, product, quantity, now, now);
+    }
+
+    public static CartItem createCartItem(Cart cart, Product product, int quantity, Long ctime, Long mtime) {
         return new CartItem(cart, product, quantity, ctime, mtime);
     }
 
@@ -77,8 +81,11 @@ public class TestEntityFactory {
         return createRefreshToken(user, UUID.randomUUID().toString(), Instant.now().plusMillis(86400000));
     }
 
-
-    public static RefreshToken createRefreshToken (User user, String token, Instant expiryDate) {
+    public static RefreshToken createRefreshToken(User user, String token, Instant expiryDate) {
         return new RefreshToken(user, token, expiryDate);
+    }
+
+    public static Category createCategory(String name) {
+        return new Category(name);
     }
 }
