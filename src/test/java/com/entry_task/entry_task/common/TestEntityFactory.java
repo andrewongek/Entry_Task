@@ -20,16 +20,63 @@ public class TestEntityFactory {
         return createUserWithRole(username, Role.CUSTOMER);
     }
 
+    public static User createCustomerWithId (String username) {
+        User user = createCustomer(username);
+        user.setId(1L);
+        return user;
+    }
+
+    public static User createCustomerWithId (String username, Long id) {
+        User user = createCustomer(username);
+        user.setId(id);
+        return user;
+    }
+
     public static User createSeller(String username) {
         return createUserWithRole(username, Role.SELLER);
     }
 
+    public static User createSellerWithId (String username) {
+        User user = createSeller(username);
+        user.setId(1L);
+        return user;
+    }
+
+    public static User createSellerWithId (String username, Long id) {
+        User user = createSeller(username);
+        user.setId(id);
+        return user;
+    }
+
+    public static User createAdminWithId(String username, Long id){
+        User user = createUserWithRole(username, Role.ADMIN);
+        user.setId(id);
+        return user;
+    }
+
+    public static User createAdminWithId(String username){
+        User user = createUserWithRole(username, Role.ADMIN);
+        user.setId(1L);
+        return user;
+    }
     public static User createAdmin(String username) {
         return createUserWithRole(username, Role.ADMIN);
     }
 
     private static User createUserWithRole(String username, Role role) {
         return new User(username, username + "@mail.com", "pass", role);
+    }
+
+    public static Product createProductWithId(String name, User seller) {
+        Product product = createProduct(name, seller);
+        product.setId(1L);
+        return product;
+    }
+
+    public static Product createProductWithId(String name, User seller, Long id) {
+        Product product = createProduct(name, seller);
+        product.setId(id);
+        return product;
     }
 
     public static Product createProduct(String name, User seller) {
