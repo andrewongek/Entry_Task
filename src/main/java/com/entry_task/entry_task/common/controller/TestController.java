@@ -13,10 +13,7 @@ public class TestController {
 
     private static final Logger logger = LoggerFactory.getLogger(TestController.class);
 
-    private final CategoryService categoryService;
-
-    public TestController(CategoryService categoryService) {
-        this.categoryService = categoryService;
+    public TestController() {
     }
 
     @GetMapping("/all")
