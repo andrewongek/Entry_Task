@@ -29,8 +29,8 @@ public class OrderController {
             description = "Creates a new order for the authenticated user. Returns the created order details."
     )
     @PostMapping("/checkout")
-    public ResponseEntity<CustomApiResponse<OrderResponse>> createOrder(@Valid @RequestBody CreateOrderRequest request) {
-        OrderResponse response = orderService.createOrder(request);
+    public ResponseEntity<CustomApiResponse<OrderResponse>> createOrder(@Valid @RequestBody CreateOrderRequest request, @RequestHeader("Idempotency-Key") String idempotencyKey) {
+        OrderResponse response = orderService.createOrder(request,idempotencyKey);
         return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
     }
 

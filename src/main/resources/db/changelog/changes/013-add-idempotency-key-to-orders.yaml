@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-idempotency-key-to-orders
+      author: andrew
+      changes:
+        - addColumn:
+            tableName: orders
+            columns:
+              - column:
+                  name: idempotency_key
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            tableName: orders
+            indexName: uk_orders_user_idem
+            unique: true
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: idempotency_key

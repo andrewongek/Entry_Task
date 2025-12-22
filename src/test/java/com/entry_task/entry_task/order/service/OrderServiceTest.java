@@ -70,6 +70,7 @@ class OrderServiceTest {
         final int PRODUCT_STOCK_2 = 10;
         final int QUANTITY_1 = 2;
         final int QUANTITY_2 = 3;
+        final String IDEMPOTENCY_KEY = "test-key-123";
 
         // Given
         User user = TestEntityFactory.createCustomerWithId("user");
@@ -110,7 +111,7 @@ class OrderServiceTest {
         });
 
         // When
-        OrderResponse response = orderService.createOrder(request);
+        OrderResponse response = orderService.createOrder(request, IDEMPOTENCY_KEY);
 
         // Then
         assertNotNull(response);
@@ -119,12 +120,11 @@ class OrderServiceTest {
         assertEquals(PRODUCT_PRICE_1 * QUANTITY_1 + PRODUCT_PRICE_2 * QUANTITY_2, response.totalAmount());
 
         // Verify product stock updated
-        assertEquals(PRODUCT_STOCK_1 - QUANTITY_1, product1.getStock());
-        assertEquals(PRODUCT_STOCK_2 - QUANTITY_2, product2.getStock());
+        verify(productService).reserveStock(PRODUCT_ID_1, QUANTITY_1);
+        verify(productService).reserveStock(PRODUCT_ID_2, QUANTITY_2);
 
         // Verify interactions
         verify(cartService).findAllCartItemsByIdAndUser(request.cartItemIds(), user);
-        verify(productService).batchUpdate(List.of(product1, product2));
         verify(cartService).deleteCartItems(cartItems);
         verify(orderRepository).save(any(Order.class));
     }

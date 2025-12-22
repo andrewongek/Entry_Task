@@ -6,6 +6,7 @@ import com.entry_task.entry_task.category.service.CategoryService;
 import com.entry_task.entry_task.common.dto.Metadata;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.enums.Role;
+import com.entry_task.entry_task.exceptions.InsufficientStockException;
 import com.entry_task.entry_task.exceptions.ProductNotActiveException;
 import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.product.entity.Product;
@@ -219,6 +220,14 @@ public class ProductService {
     })
     public void batchUpdate(List<Product> products) {
         productRepository.saveAll(products);
+    }
+
+    @Transactional
+    public void reserveStock(long productId, int qty) {
+        int updated = productRepository.reserveStock(productId, qty);
+        if (updated == 0) {
+            throw new InsufficientStockException("Insufficient stock or product inactive: " + productId);
+        }
     }
 
     /*
