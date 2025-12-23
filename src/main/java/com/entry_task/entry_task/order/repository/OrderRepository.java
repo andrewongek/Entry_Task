@@ -19,6 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     //   1) Page only Order IDs
     //   2) Fetch full order graph (items + products) by ID IN (...)
     // Keep list endpoints lightweight; fetch full items only in order-detail endpoints.
-    @EntityGraph(attributePaths = {"orderItems", "orderItems.product"})
+    @EntityGraph(attributePaths = {"items"})
     Page<Order> findAll(Specification<Order> spec, Pageable pageable);
 }
