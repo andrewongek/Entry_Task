@@ -2,6 +2,7 @@ package com.entry_task.entry_task.user.service;
 
 import com.entry_task.entry_task.auth.dto.RegisterRequest;
 import com.entry_task.entry_task.auth.service.AuthServiceImpl;
+import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.UserNotFoundException;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
@@ -55,11 +56,15 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
     }
 
+    public User getSellerById(Long sellerId){
+        return userRepository.findSellerById(sellerId).orElseThrow(UserNotFoundException::new);
+    }
+
     public User findUserBySellerId(Long sellerId) {
         return getUserById(sellerId);
     }
 
     public void validateSellerId(Long sellerId) {
-        getUserById(sellerId);
+        getSellerById(sellerId);
     }
 }
