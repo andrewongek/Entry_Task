@@ -8,6 +8,8 @@ import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.InsufficientStockException;
 import com.entry_task.entry_task.exceptions.ProductNotActiveException;
 import com.entry_task.entry_task.exceptions.ProductNotFoundException;
+import com.entry_task.entry_task.product.dto.cache.ProductDynamic;
+import com.entry_task.entry_task.product.dto.cache.ProductStatic;
 import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.dto.*;
 import com.entry_task.entry_task.product.repository.ProductRepository;
@@ -43,18 +45,33 @@ public class ProductService {
     private final AuthService authService;
     private final UserService userService;
     private final CategoryService categoryService;
+    private final ProductCacheService productCacheService;
     private final ProductRepository productRepository;
 
-    public ProductService(AuthService authService, UserService userService, CategoryService categoryService, ProductRepository productRepository) {
+    public ProductService(AuthService authService, UserService userService, CategoryService categoryService, ProductCacheService productCacheService, ProductRepository productRepository) {
         this.authService = authService;
         this.userService = userService;
         this.categoryService = categoryService;
+        this.productCacheService = productCacheService;
         this.productRepository = productRepository;
     }
 
-    @Cacheable(value = "product:info", key = "#productId")
     public ProductInfo getProductInfo(long productId) {
-        return toProductInfo(getActiveProductById(productId));
+        ProductStatic productStatic = productCacheService.getProductStatic(productId);
+
+        if (productStatic.status() == ProductStatus.INACTIVE) throw new ProductNotActiveException();
+        if (productStatic.status() == ProductStatus.DELETED) throw new ProductNotFoundException();
+
+        ProductDynamic productDynamic = productCacheService.getProductDynamic(productId);
+        return new ProductInfo(
+                productStatic.id(),
+                productStatic.name(),
+                productStatic.sellerId(),
+                productDynamic.stock(),
+                productDynamic.price(),
+                productStatic.description(),
+                productStatic.status()
+        );
     }
 
     public Product getActiveProductById(long productId) {
@@ -171,7 +188,8 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "product:list", allEntries = true),
-            @CacheEvict(value = "product:info", key = "#productId")
+            @CacheEvict(value = "product:static", key = "#productId"),
+            @CacheEvict(value = "product:dynamic", key = "#productId")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @Retryable(retryFor = {OptimisticLockException.class})
@@ -184,8 +202,8 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "product:list", allEntries = true),
-            @CacheEvict(value = "product:info", key = "#productId")
-    })
+            @CacheEvict(value = "product:static", key = "#productId"),
+            @CacheEvict(value = "product:dynamic", key = "#productId")    })
     @PreAuthorize("hasRole('ADMIN')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void activateProduct(Long productId) {
@@ -197,7 +215,8 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "product:list", allEntries = true),
-            @CacheEvict(value = "product:info", key = "#productId")
+            @CacheEvict(value = "product:static", key = "#productId"),
+            @CacheEvict(value = "product:dynamic", key = "#productId")
     })
     @PreAuthorize("hasRole('SELLER')")
     @Retryable(retryFor = {OptimisticLockException.class})
@@ -210,7 +229,8 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "product:list", allEntries = true),
-            @CacheEvict(value = "product:info", key = "#productId")
+            @CacheEvict(value = "product:static", key = "#productId"),
+            @CacheEvict(value = "product:dynamic", key = "#productId")
     })
     @PreAuthorize("hasRole('SELLER')")
     @Retryable(retryFor = {OptimisticLockException.class})
@@ -223,7 +243,7 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "product:list", allEntries = true),
-            @CacheEvict(value = "product:info", key = "#productId")
+            @CacheEvict(value = "product:dynamic", key = "#productId")
     })
     public void reserveStock(long productId, int qty) {
         int updated = productRepository.reserveStock(productId, qty);
@@ -256,6 +276,7 @@ public class ProductService {
         return productRepository.findById(productId)
                 .orElseThrow(ProductNotFoundException::new);
     }
+
     private Page<ProductInfo> getProductInfoList(ProductListRequest request, Long sellerId) {
         Sort.Direction sortDirection = Sort.Direction.fromString(request.sort().order());
         Pageable pageable = PageRequest.of(
@@ -352,6 +373,7 @@ public class ProductService {
 
         updateProductCategories(productId, categoryService.loadCategories(request.categoryIds()));
     }
+
     private void updateProductCategories(long productId, Set<Category> categories) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(ProductNotFoundException::new);
@@ -359,6 +381,7 @@ public class ProductService {
         product.getCategories().clear();
         product.getCategories().addAll(categories);
     }
+
     private void setProductStatus(Long productId, ProductStatus newStatus) {
         ProductStatus expectedCurrent = switch (newStatus) {
             case ACTIVE -> ProductStatus.INACTIVE;

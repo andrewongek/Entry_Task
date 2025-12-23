@@ -3,6 +3,8 @@ package com.entry_task.entry_task.product.repository;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.repository.projections.ProductDetailProjection;
+import com.entry_task.entry_task.product.repository.projections.ProductDynamicProjection;
+import com.entry_task.entry_task.product.repository.projections.ProductStaticProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -78,10 +80,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("""
                 update Product p
                 set
-                    p.name = :name
-                    p.price = :price
-                    p.stock = :stock
-                    p.description = :description
+                    p.name = :name,
+                    p.price = :price,
+                    p.stock = :stock,
+                    p.description = :description,
                     p.mTime = :mTime
                 where p.id = :productId
             """)
@@ -93,4 +95,28 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             @Param("description") String description,
             @Param("mTime") long mTime
     );
+
+    @Query("""
+                select
+                    p.id as id,
+                    p.name as name,
+                    s.id as sellerId,
+                    p.description as description,
+                    p.productStatus as productStatus,
+                    c.id as categoryIds
+                from Product p
+                join p.seller s
+                left join p.categories c
+                where p.id = :productId
+            """)
+    Optional<ProductStaticProjection> findProductStatic(@Param("productId") long productId);
+
+    @Query("""
+                select
+                    p.stock as stock,
+                    p.price as price
+                from Product p
+                where p.id = :productId
+            """)
+    Optional<ProductDynamicProjection> findProductDynamic(@Param("productId") long productId);
 }
