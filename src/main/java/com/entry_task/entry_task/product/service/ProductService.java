@@ -100,10 +100,6 @@ public class ProductService {
         );
     }
 
-    @Cacheable(
-            value = "product:list",
-            keyGenerator = "sha256KeyGenerator"
-    )
     public ProductListResponse<ProductListing> getUserProductListingList(ProductListRequest request, Long sellerId) {
         if (sellerId != null && sellerId > 0) {
             userService.validateSellerId(sellerId);
@@ -166,7 +162,6 @@ public class ProductService {
     }
 
     @Transactional
-    @CacheEvict(value = "product:list", allEntries = true)
     @PreAuthorize("hasRole('SELLER')")
     public Long createProduct(CreateProductRequest request) {
         User user = authService.getCurrentUser();
@@ -176,7 +171,6 @@ public class ProductService {
     }
 
     @Transactional
-    @CacheEvict(value = "product:list", allEntries = true)
     @PreAuthorize("hasRole('ADMIN')")
     public Long createProductAdmin(CreateProductRequest request, Long sellerId) {
         User user = userService.findUserBySellerId(sellerId);
@@ -187,7 +181,6 @@ public class ProductService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:static", key = "#productId"),
             @CacheEvict(value = "product:dynamic", key = "#productId")
     })
@@ -201,7 +194,6 @@ public class ProductService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:static", key = "#productId"),
             @CacheEvict(value = "product:dynamic", key = "#productId")    })
     @PreAuthorize("hasRole('ADMIN')")
@@ -214,7 +206,6 @@ public class ProductService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:static", key = "#productId"),
             @CacheEvict(value = "product:dynamic", key = "#productId")
     })
@@ -228,7 +219,6 @@ public class ProductService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:static", key = "#productId"),
             @CacheEvict(value = "product:dynamic", key = "#productId")
     })
@@ -242,7 +232,6 @@ public class ProductService {
 
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = "product:list", allEntries = true),
             @CacheEvict(value = "product:dynamic", key = "#productId")
     })
     public void reserveStock(long productId, int qty) {

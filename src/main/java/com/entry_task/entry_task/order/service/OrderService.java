@@ -29,7 +29,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,19 +41,16 @@ public class OrderService {
     private final AuthService authService;
     private final CartService cartService;
     private final ProductService productService;
-    private final OrderInvoiceCacheService orderInvoiceCacheService;
 
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AuthService authService, CartService cartService, ProductService productService, OrderInvoiceCacheService orderInvoiceCacheService) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, AuthService authService, CartService cartService, ProductService productService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.authService = authService;
         this.cartService = cartService;
         this.productService = productService;
-        this.orderInvoiceCacheService = orderInvoiceCacheService;
     }
 
     @Transactional
-    @CacheEvict(value = "orderitem:list", allEntries = true)
     @PreAuthorize("hasRole('CUSTOMER')")
     public OrderResponse createOrder(CreateOrderRequest request, String idempotencyKey) {
 
@@ -206,7 +202,7 @@ public class OrderService {
 
     @PreAuthorize("hasRole('SELLER')")
     public OrderInvoiceItemListResponse getSellerOrderInvoiceItemList(SellerOrderInvoiceItemListRequest request) {
-        return orderInvoiceCacheService.getSellerOrderInvoiceItemList(request, authService.getCurrentUser().getId());
+        return getSellerOrderInvoiceItemList(request, authService.getCurrentUser().getId());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -222,7 +218,7 @@ public class OrderService {
 
         Specification<OrderItem> spec = Specification.unrestricted();
         if (request.sellerId() != null) {
-            return orderInvoiceCacheService.getSellerOrderInvoiceItemList(new SellerOrderInvoiceItemListRequest(request.pagination(), request.filter(), request.sort()), request.sellerId());
+            return getSellerOrderInvoiceItemList(new SellerOrderInvoiceItemListRequest(request.pagination(), request.filter(), request.sort()), request.sellerId());
         }
         if (request.filter() != null) {
             if (request.filter().keyword() != null && !request.filter().keyword().isBlank()) {
@@ -245,7 +241,7 @@ public class OrderService {
         Page<OrderInvoiceItemResponse> page = orderItemRepository.findAll(spec, pageable).map(orderItem -> new OrderInvoiceItemResponse(
                 orderItem.getId(),
                 orderItem.getOrder().getId(),
-                orderItem.getOrder().getId(),
+                orderItem.getOrder().getUser().getId(),
                 orderItem.getProduct().getId(),
                 orderItem.getProduct().getName(),
                 orderItem.getQuantity(),
@@ -267,5 +263,60 @@ public class OrderService {
         );
 
     }
+
+    public OrderInvoiceItemListResponse getSellerOrderInvoiceItemList(SellerOrderInvoiceItemListRequest request, Long sellerId) {
+        Sort.Direction sortDirection =
+                Sort.Direction.fromString(request.sort().order());
+
+        Pageable pageable = PageRequest.of(
+                request.pagination().page(),
+                request.pagination().size(),
+                Sort.by(sortDirection, request.sort().field())
+        );
+
+        Specification<OrderItem> spec = OrderItemSpecifications.belongsToSeller(sellerId);
+        if (request.filter() != null) {
+            if (request.filter().keyword() != null && !request.filter().keyword().isBlank()) {
+                spec = spec.and(OrderItemSpecifications.productNameContains(request.filter().keyword()));
+            }
+            if (request.filter().userId() != null) {
+                spec = spec.and(OrderItemSpecifications.userIdEquals(request.filter().userId()));
+            }
+            if (request.filter().orderId() != null) {
+                spec = spec.and(OrderItemSpecifications.orderIdEquals(request.filter().orderId()));
+            }
+            if (request.filter().orderItemId() != null) {
+                spec = spec.and(OrderItemSpecifications.orderItemIdEquals(request.filter().orderItemId()));
+            }
+            if (request.filter().statuses() != null && !request.filter().statuses().isEmpty()) {
+                spec = spec.and(OrderItemSpecifications.orderStatusIn(request.filter().statuses()));
+            }
+        }
+
+        Page<OrderInvoiceItemResponse> page = orderItemRepository.findAll(spec, pageable).map(orderItem -> new OrderInvoiceItemResponse(
+                orderItem.getId(),
+                orderItem.getOrder().getId(),
+                orderItem.getOrder().getUser().getId(),
+                orderItem.getProduct().getId(),
+                orderItem.getProduct().getName(),
+                orderItem.getQuantity(),
+                orderItem.getPrice(),
+                orderItem.getQuantity() * orderItem.getPrice(),
+                orderItem.getOrder().getStatus().name(),
+                orderItem.getOrder().getcTime(),
+                orderItem.getOrder().getmTime()
+        ));
+
+        return new OrderInvoiceItemListResponse(
+                page.toList(),
+                new Metadata(
+                        page.getTotalElements(),
+                        page.getNumber(),
+                        page.getSize(),
+                        page.hasNext()
+                )
+        );
+    }
+
 }
 

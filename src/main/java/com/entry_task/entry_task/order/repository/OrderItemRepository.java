@@ -10,6 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long>, JpaSpecificationExecutor<OrderItem> {
-    @EntityGraph(attributePaths = {"order", "product"})
+    @EntityGraph(attributePaths = {"order", "order.user", "product"})
     Page<OrderItem> findAll(Specification<OrderItem> spec, Pageable pageable);
 }
