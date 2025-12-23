@@ -43,21 +43,21 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                             @Param("sellerId") long sellerId);
 
     @Query("""
-                select
-                    p.id as id,
-                    p.name as name,
-                    s.id as sellerId,
-                    p.stock as stock,
-                    p.price as price,
-                    c.id as categoryIds,
-                    p.description as description,
-                    p.productStatus as productStatus,
-                    p.cTime as cTime,
-                    p.mTime as mTime
-                from Product p
-                join p.seller s
-                left join p.categories c
-                where p.id = :productId
+                    select
+                        p.id as id,
+                        p.name as name,
+                        s.id as sellerId,
+                        p.stock as stock,
+                        p.price as price,
+                        c.id as categoryIds,
+                        p.description as description,
+                        p.productStatus as productStatus,
+                        p.cTime as CTime,
+                        p.mTime as MTime
+                    from Product p
+                    join p.seller s
+                    left join p.categories c
+                    where p.id = :productId
             """)
     Optional<ProductDetailProjection> findProductDetail(@Param("productId") long productId);
 
