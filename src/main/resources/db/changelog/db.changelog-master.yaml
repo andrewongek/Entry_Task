@@ -23,4 +23,5 @@ databaseChangeLog:
       file: db/changelog/changes/011-add-version-column-to-products-table.yaml
   - include:
       file: db/changelog/changes/012-add-fk-on-delete-cascade-categories.yaml
-
+  - include:
+      file: db/changelog/changes/013-add-idempotency-key-to-orders.yaml

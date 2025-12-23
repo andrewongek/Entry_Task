@@ -23,11 +23,50 @@ services:
 
   zipkin:
     image: openzipkin/zipkin:latest
-    container_name: zipkin-test
-    restart: always
+    container_name: zipkin
     ports:
-      - "9411:9411"
+      - 9411:9411
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: always
+
+  otel-collector:
+    container_name: otel-collector
+    image: otel/opentelemetry-collector-contrib:latest
+    command:
+      - --config=/etc/otelcol/otel-collector-config.yaml
+    volumes:
+      - ./docker/otelcol/otel-collector-config.yaml:/etc/otelcol/otel-collector-config.yaml
+    ports:
+      - 1777:1777 # pprof extension
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP http receiver
+      - 55679:55679 # zpages extension
+    restart: always
 
 volumes:
   mysql_data:
   redis_data:
+  prometheus_data:
+  grafana_data:

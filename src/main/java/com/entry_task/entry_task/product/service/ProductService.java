@@ -1,11 +1,11 @@
 package com.entry_task.entry_task.product.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.category.service.CategoryService;
 import com.entry_task.entry_task.common.dto.Metadata;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.enums.Role;
+import com.entry_task.entry_task.exceptions.InsufficientStockException;
 import com.entry_task.entry_task.exceptions.ProductNotActiveException;
 import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.product.entity.Product;
@@ -23,7 +23,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +31,6 @@ import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.category.entity.Category;
 
 import java.time.Instant;
-import java.util.List;
 
 @Service
 public class ProductService {
@@ -215,10 +213,13 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "product:list", allEntries = true),
-            @CacheEvict(value = "product:info", key = "#product.id")
+            @CacheEvict(value = "product:info", key = "#productId")
     })
-    public void batchUpdate(List<Product> products) {
-        productRepository.saveAll(products);
+    public void reserveStock(long productId, int qty) {
+        int updated = productRepository.reserveStock(productId, qty);
+        if (updated == 0) {
+            throw new InsufficientStockException("Insufficient stock or product inactive: " + productId);
+        }
     }
 
     /*

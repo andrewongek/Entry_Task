@@ -1,15 +1,10 @@
 package com.entry_task.entry_task.order.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.cart.entity.CartItem;
 import com.entry_task.entry_task.cart.service.CartService;
 import com.entry_task.entry_task.common.dto.Metadata;
-import com.entry_task.entry_task.enums.ProductStatus;
-import com.entry_task.entry_task.exceptions.InsufficientStockException;
 import com.entry_task.entry_task.exceptions.InvalidCartItemException;
-import com.entry_task.entry_task.exceptions.ProductNotActiveException;
-import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.order.dto.*;
 import com.entry_task.entry_task.order.entity.Order;
 import com.entry_task.entry_task.order.entity.OrderItem;
@@ -20,21 +15,20 @@ import com.entry_task.entry_task.order.repository.OrderRepository;
 import com.entry_task.entry_task.order.specifications.OrderSpecifications;
 import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.user.entity.User;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,12 +54,38 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = "orderitem:list", allEntries = true)
     @PreAuthorize("hasRole('CUSTOMER')")
-    @Retryable(retryFor = {OptimisticLockException.class})
-    public OrderResponse createOrder(CreateOrderRequest request) {
+    public OrderResponse createOrder(CreateOrderRequest request, String idempotencyKey) {
 
         User user = authService.getCurrentUser();
         log.info("User {} has initiated a order for cart items {}", user.getId(), request.cartItemIds());
+
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("Idempotency-Key is required");
+        }
+
+        Order existing = orderRepository
+                .findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey)
+                .orElse(null);
+
+        if (existing != null) {
+            return toOrderResponse(existing);
+        }
+        // 2) Claim the idempotency key early to avoid necessary processing
+        Order order = new Order(user);
+        order.setIdempotencyKey(idempotencyKey);
+
+        try {
+            orderRepository.saveAndFlush(order); // forces unique constraint check now
+        } catch (DataIntegrityViolationException e) {
+            // Another request won the race; return existing order
+            Order winner = orderRepository
+                    .findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey)
+                    .orElseThrow();
+            return toOrderResponse(winner);
+        }
+
         List<CartItem> cartItems =
                 cartService.findAllCartItemsByIdAndUser(
                         request.cartItemIds(), user);
@@ -82,21 +102,10 @@ public class OrderService {
                                 item.getQuantity()))
                         .toList());
 
-        Order order = new Order(user);
-        List<Product> updatedProducts = new ArrayList<>();
-
         for (CartItem item : cartItems) {
             Product product = item.getProduct();
 
-            if (!product.getProductStatus().equals(ProductStatus.ACTIVE)) {
-                throw new ProductNotActiveException();
-            }
-
-            if (product.getStock() < item.getQuantity()) {
-                throw new InsufficientStockException(
-                        "Insufficient stock for product: " + product.getId()
-                );
-            }
+            productService.reserveStock(product.getId(), item.getQuantity());
 
             OrderItem orderItem = new OrderItem();
             orderItem.setProduct(product);
@@ -104,20 +113,21 @@ public class OrderService {
             orderItem.setPrice(product.getPrice());
 
             order.addItem(orderItem);
-
-            product.setStock(product.getStock() - item.getQuantity());
-            updatedProducts.add(product);
         }
 
         order.recalculateTotal();
 
+        order.setmTime(Instant.now().getEpochSecond());
         orderRepository.save(order);
-        productService.batchUpdate(updatedProducts);
         cartService.deleteCartItems(cartItems);
 
         log.info("Order {} successfully created by user {}. Total items: {}, Total amount: {}",
                 order.getId(), user.getId(), order.getItems().size(), order.getTotalAmount());
+        return toOrderResponse(order);
 
+    }
+
+    public OrderResponse toOrderResponse(Order order) {
         return new OrderResponse(
                 order.getId(),
                 order.getStatus().name(),
@@ -198,7 +208,6 @@ public class OrderService {
     public OrderInvoiceItemListResponse getSellerOrderInvoiceItemList(SellerOrderInvoiceItemListRequest request) {
         return orderInvoiceCacheService.getSellerOrderInvoiceItemList(request, authService.getCurrentUser().getId());
     }
-
 
     @PreAuthorize("hasRole('ADMIN')")
     public OrderInvoiceItemListResponse getOrderInvoiceItemList(AdminOrderInvoiceItemListRequest request) {

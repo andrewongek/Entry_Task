@@ -9,7 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_orders_user_idem",
+                columnNames = {"user_id", "idempotency_key"}
+        )
+)
 public class Order {
     protected Order() {
         // required by JPA
@@ -22,6 +27,9 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "idempotency_key", nullable = false, length = 64)
+    private String idempotencyKey;
 
     @OneToMany(
             mappedBy = "order",
@@ -117,5 +125,13 @@ public class Order {
 
     public void setmTime(Long mTime) {
         this.mTime = mTime;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }
