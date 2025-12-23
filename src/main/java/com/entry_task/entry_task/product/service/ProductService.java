@@ -11,6 +11,7 @@ import com.entry_task.entry_task.exceptions.ProductNotFoundException;
 import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.dto.*;
 import com.entry_task.entry_task.product.repository.ProductRepository;
+import com.entry_task.entry_task.product.repository.projections.ProductDetailProjection;
 import com.entry_task.entry_task.user.service.UserService;
 import com.entry_task.entry_task.product.specifications.ProductSpecifications;
 import jakarta.persistence.OptimisticLockException;
@@ -31,6 +32,8 @@ import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.category.entity.Category;
 
 import java.time.Instant;
+import java.util.Set;
+
 
 @Service
 public class ProductService {
@@ -64,9 +67,20 @@ public class ProductService {
 
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ProductDetailResponse getSellerProductDetail(long productId) {
-        Product product = getProductById(productId);
-        validateProductOwnership(product);
-        return getProductDetail(productId);
+        validateProductOwnership(productId);
+        ProductDetailProjection p = productRepository.findProductDetail(productId).orElseThrow(ProductNotFoundException::new);
+        return new ProductDetailResponse(
+                p.getId(),
+                p.getName(),
+                p.getSellerId(),
+                p.getStock(),
+                p.getPrice(),
+                p.getCategoryIds(),
+                p.getDescription(),
+                p.getProductStatus(),
+                p.getCTime(),
+                p.getMTime()
+        );
     }
 
     @Cacheable(
@@ -162,8 +176,7 @@ public class ProductService {
     @PreAuthorize("hasRole('ADMIN')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void deactivateProduct(Long productId) {
-        Product product = getProductById(productId);
-        validateProductOwnership(product);
+        validateProductOwnership(productId);
         setProductStatus(productId, ProductStatus.INACTIVE);
         log.info("Admin deactivated product: {}", productId);
     }
@@ -176,8 +189,7 @@ public class ProductService {
     @PreAuthorize("hasRole('ADMIN')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void activateProduct(Long productId) {
-        Product product = getProductById(productId);
-        validateProductOwnership(product);
+        validateProductOwnership(productId);
         setProductStatus(productId, ProductStatus.ACTIVE);
         log.info("Admin activated product: {}", productId);
     }
@@ -190,8 +202,7 @@ public class ProductService {
     @PreAuthorize("hasRole('SELLER')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void deleteProductById(Long productId) {
-        Product product = getProductById(productId);
-        validateProductOwnership(product);
+        validateProductOwnership(productId);
         setProductStatus(productId, ProductStatus.DELETED);
         log.info("Seller deleted product: {}", productId);
     }
@@ -204,9 +215,8 @@ public class ProductService {
     @PreAuthorize("hasRole('SELLER')")
     @Retryable(retryFor = {OptimisticLockException.class})
     public void updateProductById(Long productId, UpdateProductRequest request) {
-        Product product = getProductById(productId);
-        validateProductOwnership(product);
-        updateProduct(product, request);
+        validateProductOwnership(productId);
+        updateProduct(productId, request);
         log.info("Seller updated product: {}", productId);
     }
 
@@ -246,11 +256,6 @@ public class ProductService {
         return productRepository.findById(productId)
                 .orElseThrow(ProductNotFoundException::new);
     }
-
-    private ProductDetailResponse getProductDetail(long productId) {
-        return toProductDetail(getProductById(productId));
-    }
-
     private Page<ProductInfo> getProductInfoList(ProductListRequest request, Long sellerId) {
         Sort.Direction sortDirection = Sort.Direction.fromString(request.sort().order());
         Pageable pageable = PageRequest.of(
@@ -337,42 +342,51 @@ public class ProductService {
         return productRepository.save(newProduct).getId();
     }
 
-    private void updateProduct(Product product, UpdateProductRequest request) {
+    @Transactional
+    private void updateProduct(long productId, UpdateProductRequest request) {
         long now = Instant.now().getEpochSecond();
-        product.setName(request.name());
-        product.setPrice(request.price());
-        product.setStock(request.stock());
-        product.setDescription(request.description());
-        product.setmTime(now);
-        product.setCategories(categoryService.loadCategories(request.categoryIds()));
-        productRepository.save(product);
+        int updated = productRepository.updateProduct(productId, request.name(), request.price(), request.stock(), request.description(), now);
+        if (updated == 0) {
+            throw new ProductNotFoundException();
+        }
+
+        updateProductCategories(productId, categoryService.loadCategories(request.categoryIds()));
+    }
+    private void updateProductCategories(long productId, Set<Category> categories) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(ProductNotFoundException::new);
+
+        product.getCategories().clear();
+        product.getCategories().addAll(categories);
+    }
+    private void setProductStatus(Long productId, ProductStatus newStatus) {
+        ProductStatus expectedCurrent = switch (newStatus) {
+            case ACTIVE -> ProductStatus.INACTIVE;
+            case INACTIVE -> ProductStatus.ACTIVE;
+            default -> throw new IllegalStateException("Invalid target status");
+        };
+
+        int updated = productRepository.updateStatusIfCurrent(
+                productId,
+                expectedCurrent,
+                newStatus
+        );
+
+        if (updated == 0) {
+            throw new IllegalStateException(
+                    "Invalid status transition or product not found"
+            );
+        }
     }
 
-    private void setProductStatus(Long productId, ProductStatus status) {
-        Product product = getProductById(productId);
-        validateStatusUpdateOperation(product.getProductStatus(), status);
-        product.setProductStatus(status);
-        productRepository.save(product);
-    }
-
-    private void validateProductOwnership(Product product) {
+    private void validateProductOwnership(long productId) {
         User currentUser = authService.getCurrentUser();
         if (currentUser.getRole() == Role.ADMIN) {
             return;
         }
-        if (!product.getSeller().getId().equals(currentUser.getId())) {
+        boolean owned = productRepository.isOwnedBySeller(productId, currentUser.getId());
+        if (!owned) {
             throw new AccessDeniedException("You do not own this product");
-        }
-    }
-
-    private void validateStatusUpdateOperation(ProductStatus before, ProductStatus after) {
-        switch (before) {
-            case ACTIVE, INACTIVE -> {
-                if (before.equals(after)) {
-                    throw new IllegalStateException("Product Status is already " + before.name());
-                }
-            }
-            default -> throw new IllegalStateException("Invalid Product Status Change");
         }
     }
 
@@ -395,24 +409,6 @@ public class ProductService {
                 product.getPrice(),
                 product.getDescription(),
                 product.getProductStatus()
-        );
-    }
-
-    private ProductDetailResponse toProductDetail(Product product) {
-        return new ProductDetailResponse(
-                product.getId(),
-                product.getName(),
-                product.getSeller().getId(),
-                product.getStock(),
-                product.getPrice(),
-                product.getCategories()
-                        .stream()
-                        .map(Category::getId)
-                        .toList(),
-                product.getDescription(),
-                product.getProductStatus(),
-                product.getcTime(),
-                product.getmTime()
         );
     }
 }
