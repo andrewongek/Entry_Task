@@ -5,13 +5,21 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 exporters:
-  logging:
-    loglevel: debug
+  debug: { }
+
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
+
+  zipkin:
+    endpoint: http://0.0.0.0:9411
 
   prometheus:
     endpoint: 0.0.0.0:8889
     const_labels:
       label1: value1
+
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
 
 extensions:
   health_check:
@@ -24,6 +32,12 @@ extensions:
 service:
   extensions: [ health_check, pprof, zpages ]
   pipelines:
+    traces:
+      receivers: [ otlp ]
+      exporters: [ debug, otlphttp/tempo]
     metrics:
       receivers: [ otlp ]
       exporters: [ prometheus ]
+    logs:
+      receivers: [ otlp ]
+      exporters: [ debug, otlphttp/loki ]
