@@ -40,6 +40,23 @@ services:
       - '--storage.tsdb.path=/prometheus'
     restart: always
 
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo/tempo.yaml" ]
+    volumes:
+      - ./docker/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - ./data/tempo:/tmp/tempo
+    ports:
+      - "3200:3200" # Tempo
+
+  loki:
+    image: grafana/loki:latest
+    command: -config.expand-env=true -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./docker/loki/loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - "3100:3100"
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -64,6 +81,10 @@ services:
       - 4318:4318 # OTLP http receiver
       - 55679:55679 # zpages extension
     restart: always
+    depends_on:
+      - tempo
+      - prometheus
+      - loki
 
 volumes:
   mysql_data:
