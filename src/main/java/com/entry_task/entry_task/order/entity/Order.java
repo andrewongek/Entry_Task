@@ -59,6 +59,15 @@ public class Order {
         this.mTime = now;
     }
 
+    public Order(User user, String idempotencyKey) {
+        long now = Instant.now().getEpochSecond();
+        this.user = user;
+        this.idempotencyKey = idempotencyKey;
+        this.status = OrderStatus.CREATED;
+        this.cTime = now;
+        this.mTime = now;
+    }
+
     /* ===== Domain helpers ===== */
     public void addItem(OrderItem item) {
         items.add(item);
