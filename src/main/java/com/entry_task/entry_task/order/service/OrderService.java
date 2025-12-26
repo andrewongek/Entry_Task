@@ -54,73 +54,57 @@ public class OrderService {
     @PreAuthorize("hasRole('CUSTOMER')")
     public OrderResponse createOrder(CreateOrderRequest request, String idempotencyKey) {
 
-        User user = authService.getCurrentUser();
-        log.info("User {} has initiated a order for cart items {}", user.getId(), request.cartItemIds());
-
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new IllegalArgumentException("Idempotency-Key is required");
         }
 
-        Order existing = orderRepository
-                .findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey)
-                .orElse(null);
+        User user = authService.getCurrentUser();
+        log.info("User {} initiated order for cartItemIds={}", user.getId(), request.cartItemIds());
 
-        if (existing != null) {
-            return toOrderResponse(existing);
-        }
-        // 2) Claim the idempotency key early to avoid necessary processing
-        Order order = new Order(user);
-        order.setIdempotencyKey(idempotencyKey);
-
-        try {
-            orderRepository.saveAndFlush(order); // forces unique constraint check now
-        } catch (DataIntegrityViolationException e) {
-            // Another request won the race; return existing order
-            Order winner = orderRepository
-                    .findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey)
-                    .orElseThrow();
-            return toOrderResponse(winner);
-        }
-
-        List<CartItem> cartItems =
-                cartService.findAllCartItemsByIdAndUser(
-                        request.cartItemIds(), user);
-
+        List<CartItem> cartItems = cartService.findAllCartItemsByIdAndUser(request.cartItemIds(), user);
         if (cartItems.size() != request.cartItemIds().size()) {
             throw new InvalidCartItemException("One or more cart items are invalid");
         }
 
         log.debug("User {} cartItems: {}", user.getId(),
                 cartItems.stream()
-                        .map(item -> String.format("cartItemId = %d, productId=%d, quantity=%d",
-                                item.getCart().getId(),
-                                item.getProduct().getId(),
-                                item.getQuantity()))
-                        .toList());
+                        .map(ci -> String.format("cartItemId=%d, productId=%d, qty=%d",
+                                ci.getId(), ci.getProduct().getId(), ci.getQuantity()))
+                        .toList()
+        );
 
-        for (CartItem item : cartItems) {
-            Product product = item.getProduct();
+        Order order = new Order(user, idempotencyKey);
 
-            productService.reserveStock(product.getId(), item.getQuantity());
+        try {
+            orderRepository.saveAndFlush(order);
+        } catch (DataIntegrityViolationException e) {
+            Order winner = orderRepository.findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey).orElseThrow();
+            return toOrderResponse(winner);
+        }
 
-            OrderItem orderItem = new OrderItem();
-            orderItem.setProduct(product);
-            orderItem.setQuantity(item.getQuantity());
-            orderItem.setPrice(product.getPrice());
+        // 3) Reserve stock + build order items
+        for (CartItem ci : cartItems) {
+            Product p = ci.getProduct();
 
-            order.addItem(orderItem);
+            productService.reserveStock(p.getId(), ci.getQuantity());
+
+            OrderItem oi = new OrderItem();
+            oi.setProduct(p);
+            oi.setQuantity(ci.getQuantity());
+            oi.setPrice(p.getPrice());
+            order.addItem(oi);
         }
 
         order.recalculateTotal();
-
         order.setmTime(Instant.now().getEpochSecond());
-        orderRepository.save(order);
+
+        // 4) Clear cart in same TX
         cartService.deleteCartItems(cartItems);
 
-        log.info("Order {} successfully created by user {}. Total items: {}, Total amount: {}",
+        log.info("Order {} created by user {} items={} total={}",
                 order.getId(), user.getId(), order.getItems().size(), order.getTotalAmount());
-        return toOrderResponse(order);
 
+        return toOrderResponse(order);
     }
 
     public OrderResponse toOrderResponse(Order order) {
