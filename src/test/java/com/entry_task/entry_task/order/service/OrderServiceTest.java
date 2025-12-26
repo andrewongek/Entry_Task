@@ -54,10 +54,6 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Test
-    void name() {
-    }
-
-    @Test
     void createOrder_validCartItems_shouldReturnOrderResponse() {
         // Constants
         final long CART_ID = 100L;
