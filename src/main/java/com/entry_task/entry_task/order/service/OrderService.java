@@ -79,6 +79,7 @@ public class OrderService {
             orderRepository.saveAndFlush(order);
         } catch (DataIntegrityViolationException e) {
             Order winner = orderRepository.findByUserIdAndIdempotencyKey(user.getId(), idempotencyKey).orElseThrow();
+            log.debug("User {} Idempotency found", user.getId());
             return toOrderResponse(winner);
         }
 
@@ -97,6 +98,7 @@ public class OrderService {
 
         order.recalculateTotal();
         order.setmTime(Instant.now().getEpochSecond());
+        orderRepository.save(order);
 
         // 4) Clear cart in same TX
         cartService.deleteCartItems(cartItems);

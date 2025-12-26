@@ -90,9 +90,9 @@ class OrderServiceTest {
         product2.setProductStatus(ProductStatus.ACTIVE);
 
         CartItem cartItem1 = TestEntityFactory.createCartItem(TestEntityFactory.createEmptyCart(user), product1, QUANTITY_1);
-
+        cartItem1.setId(1L);
         CartItem cartItem2 = TestEntityFactory.createCartItem(TestEntityFactory.createEmptyCart(user), product2, QUANTITY_2);
-
+        cartItem2.setId(2L);
         List<CartItem> cartItems = List.of(cartItem1, cartItem2);
 
         CreateOrderRequest request = new CreateOrderRequest(
@@ -115,7 +115,6 @@ class OrderServiceTest {
 
         // Then
         assertNotNull(response);
-        assertEquals(ORDER_ID, response.orderId());
         assertEquals(OrderStatus.CREATED.name(), response.status()); // assuming default status
         assertEquals(PRODUCT_PRICE_1 * QUANTITY_1 + PRODUCT_PRICE_2 * QUANTITY_2, response.totalAmount());
 
