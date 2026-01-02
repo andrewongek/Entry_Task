@@ -37,8 +37,10 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
                 select ci
                 from CartItem ci
                 join ci.cart c
+                join ci.product p
                 where ci.id in :ids
                   and c.user = :user
+                  and p.productStatus = com.entry_task.entry_task.enums.ProductStatus.ACTIVE
             """)
     List<CartItem> findAllByIdAndUser(
             @Param("ids") List<Long> ids,

@@ -38,7 +38,7 @@ public class CartService {
         this.productService = productService;
         this.authService = authService;
     }
-
+    // TODO remove cart item if quantity is 0 or item inactive
     @PreAuthorize("hasRole('CUSTOMER')")
     public CartResponse getCart() {
         User currentUser = authService.getCurrentUser();

@@ -241,25 +241,6 @@ public class ProductService {
         }
     }
 
-    /*
-    Limitations of current approach:
-    1. @CacheEvict(value = "product:list", allEntries = true)
-       - Clears the entire product list cache on every update.
-       - Makes caching ineffective if product updates are frequent.
-
-    2. @CacheEvict(value = "product:info", key = "#product.id") with a list
-       - Does not automatically handle multiple products.
-       - Spring SpEL cannot iterate over a collection, so some product caches may not be evicted properly in batch updates.
-
-    Future Solution – Static/Dynamic Caches:
-    1. Split caches into:
-       - product:static → fields that rarely change (name, description, seller, categories)
-       - product:dynamic → fields that change frequently (stock, price)
-
-    2. Eviction strategy:
-       - Evict only affected products from dynamic cache (`product:dynamic`) after updates.
-       - Keep static caches and product:list cache mostly intact unless bulk changes occur.
-    */
     // Private Functions
     private Product getProductById(long productId) {
         return productRepository.findById(productId)
