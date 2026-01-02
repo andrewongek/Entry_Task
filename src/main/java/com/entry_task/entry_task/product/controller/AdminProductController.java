@@ -32,7 +32,7 @@ public class AdminProductController {
 
     @Operation(summary = "Get seller's product listing", description = "Retrieve a paginated list of a seller's products. Allows for sorting, filtering and searches")
     @PostMapping("/{sellerId}/products/search")
-    public ResponseEntity<CustomApiResponse<ProductListResponse<ProductInfo>>> getSellerProductsInfoList(@PathVariable Long sellerId, @RequestBody ProductListRequest request) {
+    public ResponseEntity<CustomApiResponse<ProductListResponse<ProductInfo>>> getSellerProductsInfoList(@PathVariable Long sellerId, @Valid @RequestBody ProductListRequest request) {
         ProductListResponse<ProductInfo> responseData = productService.getAdminProductInfoList(request, sellerId);
         return ResponseEntity.ok().body(CustomApiResponse.success("success", responseData));
     }

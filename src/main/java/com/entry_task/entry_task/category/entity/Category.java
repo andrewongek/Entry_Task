@@ -18,12 +18,7 @@ public class Category {
     @Column(unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "categories",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<Product> products = new HashSet<>();
-
     protected Category(){
-
     }
 
     public Category(String name) {
@@ -44,13 +39,5 @@ public class Category {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Set<Product> getProducts() {
-        return products;
-    }
-
-    public void setProducts(Set<Product> products) {
-        this.products = products;
     }
 }

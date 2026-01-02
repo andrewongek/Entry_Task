@@ -24,14 +24,14 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @Operation(summary = "Get product listing", description = "Retrieve a paginated list of products. Allows for sorting, filtering and searches")
+    @Operation(summary = "Search product listing", description = "Retrieve a paginated list of products. Allows for sorting, filtering and searches")
     @PostMapping("/search")
     public ResponseEntity<CustomApiResponse<ProductListResponse<ProductListing>>> getProductListingList(@Valid @RequestBody ProductListRequest request) {
         ProductListResponse<ProductListing> responseData = productService.getUserProductListingList(request, null);
         return ResponseEntity.ok().body(CustomApiResponse.success("success", responseData));
     }
 
-    @Operation(summary = "Get seller's product listing", description = "Retrieve a paginated list of a seller's products. Allows for sorting, filtering and searches")
+    @Operation(summary = "Search seller's product listing", description = "Retrieve a paginated list of a seller's products. Allows for sorting, filtering and searches")
     @PostMapping("/{sellerId}/search")
     public ResponseEntity<CustomApiResponse<ProductListResponse<ProductListing>>> getSellerProductListingList(@PathVariable Long sellerId, @Valid @RequestBody ProductListRequest request) {
         ProductListResponse<ProductListing> responseData = productService.getUserProductListingList(request, sellerId);
