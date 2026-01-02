@@ -1,6 +1,8 @@
 package com.entry_task.entry_task.product.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 
@@ -12,9 +14,9 @@ public record ProductFilter(
                         "0 = DELETED, 1 = ACTIVE, 2 = INACTIVE",
                 example = "[1, 2]"
         )
-        List<Integer> statuses,
+        List<@Min(0) Integer> statuses,
 
         @Schema(description = "List of category IDs to filter products", example = "[1, 2, 3]")
-        List<Long> categoryIds
+        List<@Positive Long> categoryIds
 ) {
 }

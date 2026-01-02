@@ -48,7 +48,7 @@ public class AuthController {
 
     @Operation(summary = "User login", description = "Authenticate user and return access token")
     @PostMapping("/login")
-    public ResponseEntity<CustomApiResponse<Map<String, Object>>> loginUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<CustomApiResponse<Map<String, Object>>> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         Map<String, Object> tokenData = authService.login(loginRequest);
         return ResponseEntity.ok(CustomApiResponse.success("access", tokenData));
     }

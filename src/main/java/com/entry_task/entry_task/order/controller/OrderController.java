@@ -35,11 +35,11 @@ public class OrderController {
     }
 
     @Operation(
-            summary = "Get list of user orders",
+            summary = "Search list of user orders",
             description = "Retrieves a list of orders for the authenticated user, filtered and paginated according to the request."
     )
     @PostMapping("/search")
-    public ResponseEntity<CustomApiResponse<OrderListResponse>> getUserOrdersList(@RequestBody OrderListRequest request) {
+    public ResponseEntity<CustomApiResponse<OrderListResponse>> getUserOrdersList(@Valid @RequestBody OrderListRequest request) {
         OrderListResponse response = orderService.getUserOrdersList(request);
         return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
     }
