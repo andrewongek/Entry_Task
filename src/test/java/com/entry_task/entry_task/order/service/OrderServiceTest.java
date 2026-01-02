@@ -92,7 +92,8 @@ class OrderServiceTest {
         CartItem cartItem1 = TestEntityFactory.createCartItem(TestEntityFactory.createEmptyCart(user), product1, QUANTITY_1);
 
         CartItem cartItem2 = TestEntityFactory.createCartItem(TestEntityFactory.createEmptyCart(user), product2, QUANTITY_2);
-
+        cartItem1.setId(1L);
+        cartItem2.setId(2L);
         List<CartItem> cartItems = List.of(cartItem1, cartItem2);
 
         CreateOrderRequest request = new CreateOrderRequest(
@@ -104,7 +105,7 @@ class OrderServiceTest {
 
         Order savedOrder = new Order(user);
         savedOrder.setId(ORDER_ID);
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+        when(orderRepository.saveAndFlush(any(Order.class))).thenAnswer(invocation -> {
             Order o = invocation.getArgument(0);
             o.setId(ORDER_ID);
             return o;
@@ -126,7 +127,7 @@ class OrderServiceTest {
         // Verify interactions
         verify(cartService).findAllCartItemsByIdAndUser(request.cartItemIds(), user);
         verify(cartService).deleteCartItems(cartItems);
-        verify(orderRepository).save(any(Order.class));
+        verify(orderRepository).saveAndFlush(any(Order.class));
     }
 
     @Test
