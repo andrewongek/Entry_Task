@@ -1,6 +1,7 @@
 package com.entry_task.entry_task.auth.service;
 
 import com.entry_task.entry_task.auth.dto.LoginRequest;
+import com.entry_task.entry_task.auth.dto.TokenResponse;
 import com.entry_task.entry_task.exceptions.InvalidRefreshTokenException;
 import com.entry_task.entry_task.auth.entity.RefreshToken;
 import com.entry_task.entry_task.user.entity.User;
@@ -56,32 +57,35 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Map<String, Object> login(LoginRequest loginRequest) {
+    public TokenResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password())
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String accessToken = jwtUtil.generateToken(userDetails.getUsername());
-        long userId = userService.getIdByUsername(userDetails.getUsername());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userId);
-        log.info("User logged in successfully: userId={}", userId);
-        return Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken.getToken()
-        );
+        User user = userService.getUserByUsername(userDetails.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        log.info("User logged in successfully: userId={}", user.getId());
+        return new TokenResponse(accessToken, refreshToken.getToken());
     }
 
     @Override
-    public Map<String, String> refresh(String requestToken) {
-        return refreshTokenService.findByToken(requestToken).map(token -> {
-            if (refreshTokenService.isTokenExpired(token)) {
-                refreshTokenService.deleteToken(token);
-                throw new InvalidRefreshTokenException("Refresh token expired. Please login again.");
-            }
-            String newJwt = jwtUtil.generateToken(token.getUser().getUsername());
-            return Map.of("token", newJwt);
-        }).orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
+    @Transactional
+    public TokenResponse refresh(String requestToken) {
+        RefreshToken token = refreshTokenService.findByToken(requestToken)
+                .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
+
+        if (refreshTokenService.isTokenExpired(token)) {
+            refreshTokenService.deleteToken(token);
+            throw new InvalidRefreshTokenException("Refresh token expired. Please login again.");
+        }
+
+        String newAccessToken = jwtUtil.generateToken(token.getUser().getUsername());
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(token.getUser());
+        refreshTokenService.deleteToken(token);
+
+        return new TokenResponse(newAccessToken, newRefreshToken.getToken());
     }
 
     @Override

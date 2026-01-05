@@ -47,10 +47,11 @@ public class UserService {
         log.info("{} username: {} id: {} registered", registerRequest.role(), newUser.getUsername(), newUser.getId());
     }
 
-    public long getIdByUsername(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
-        return user.getId();
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
     }
+
+
 
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);

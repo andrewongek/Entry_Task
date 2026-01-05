@@ -2,6 +2,7 @@ package com.entry_task.entry_task.auth.service;
 
 import com.entry_task.entry_task.auth.entity.RefreshToken;
 import com.entry_task.entry_task.auth.repository.RefreshTokenRepository;
+import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,9 @@ public class RefreshTokenService {
         this.userService = userService;
     }
 
-    public RefreshToken createRefreshToken(Long userId) {
+    public RefreshToken createRefreshToken(User user) {
         var token = new RefreshToken(
-                userService.getUserById(userId),
+                user,
                 UUID.randomUUID().toString(),
                 Instant.now().plusMillis(refreshTokenDurationMs)
         );
