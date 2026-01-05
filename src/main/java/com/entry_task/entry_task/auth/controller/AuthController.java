@@ -54,14 +54,14 @@ public class AuthController {
 
     @Operation(summary = "Refresh JWT token", description = "Refresh access token using refresh token")
     @PostMapping("/refresh")
-    public ResponseEntity<CustomApiResponse<TokenResponse>> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<CustomApiResponse<TokenResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
         TokenResponse response = authService.refresh(refreshTokenRequest.refreshToken());
         return ResponseEntity.ok(CustomApiResponse.success("refresh", response));
     }
 
     @Operation(summary = "Logout user", description = "Invalidate refresh token and logout user")
     @PostMapping("/logout")
-    public ResponseEntity<CustomApiResponse<Void>> logoutUser(@RequestBody LogoutRequest logoutRequest) {
+    public ResponseEntity<CustomApiResponse<Void>> logoutUser(@Valid @RequestBody LogoutRequest logoutRequest) {
         authService.delete(logoutRequest.refreshToken());
         return ResponseEntity.ok(CustomApiResponse.success("Logged out successfully.", null));
     }

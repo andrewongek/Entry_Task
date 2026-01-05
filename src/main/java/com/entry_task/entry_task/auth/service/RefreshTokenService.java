@@ -17,11 +17,9 @@ public class RefreshTokenService {
     private Long refreshTokenDurationMs;
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final UserService userService;
 
-    public RefreshTokenService(RefreshTokenRepository repo, UserService userService) {
+    public RefreshTokenService(RefreshTokenRepository repo) {
         this.refreshTokenRepository = repo;
-        this.userService = userService;
     }
 
     public RefreshToken createRefreshToken(User user) {
