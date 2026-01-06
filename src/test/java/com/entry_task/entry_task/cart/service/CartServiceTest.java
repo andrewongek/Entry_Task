@@ -1,7 +1,6 @@
 package com.entry_task.entry_task.cart.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.cart.dto.CartItemDto;
 import com.entry_task.entry_task.cart.dto.CartItemResponse;
 import com.entry_task.entry_task.cart.dto.CartResponse;
@@ -33,7 +32,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.lang.Long.sum;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -117,7 +115,7 @@ class CartServiceTest {
     }
 
     @Test
-    void addProductToCart_addingValidProduct_emptyCart_shouldAddToCart() {
+    void addProductToCart_addingValidProduct_emptyCart_shouldUpdateInCart() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -136,7 +134,7 @@ class CartServiceTest {
         when(cartRepository.findByUserId(customer.getId())).thenReturn(Optional.of(cart));
         when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())).thenReturn(Optional.of(cartItemResponse));
 
-        cartService.addProductToCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
+        cartService.updateProductInCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
 
         // Then
         verify(cartItemRepository).save(cartItemCaptor.capture());
@@ -155,7 +153,7 @@ class CartServiceTest {
     }
 
     @Test
-    void addProductToCart_addingValidProductWithQuantityFour_TwoExistingProductInCart_shouldUpdateQuantityToFour() {
+    void updateProductToCart_addingValidProductWithQuantityFour_TwoExistingProductInCart_shouldUpdateQuantityInFour() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -175,7 +173,7 @@ class CartServiceTest {
         when(cartRepository.findByUserId(customer.getId())).thenReturn(Optional.of(cart));
         when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())).thenReturn(Optional.of(cartItemResponse));
 
-        cartService.addProductToCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
+        cartService.updateProductInCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
 
         // Then
         verify(cartItemRepository).save(cartItemCaptor.capture());
@@ -194,7 +192,7 @@ class CartServiceTest {
     }
 
     @Test
-    void addProductToCart_addingValidProductWithQuantityTwo_FourExistingProductInCart_shouldUpdateQuantityToTwo() {
+    void updateProductToCart_addingValidProductWithQuantityTwo_FourExistingProductInCart_shouldUpdateQuantityInTwo() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -214,7 +212,7 @@ class CartServiceTest {
         when(cartRepository.findByUserId(customer.getId())).thenReturn(Optional.of(cart));
         when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())).thenReturn(Optional.of(cartItemResponse));
 
-        cartService.addProductToCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
+        cartService.updateProductInCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
 
         // Then
         verify(cartItemRepository).save(cartItemCaptor.capture());
@@ -233,7 +231,7 @@ class CartServiceTest {
     }
 
     @Test
-    void addProductToCart_productStockZero_shouldThrowInsufficientStockException() {
+    void updateProductToCart_productStockZero_shouldThrowInsufficientStockException() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -249,13 +247,13 @@ class CartServiceTest {
 
 
         // Then
-        InsufficientStockException ex = assertThrows(InsufficientStockException.class, () -> cartService.addProductToCart(new UpdateCartRequest(product.getId(), addedProductQuantity)));
+        InsufficientStockException ex = assertThrows(InsufficientStockException.class, () -> cartService.updateProductInCart(new UpdateCartRequest(product.getId(), addedProductQuantity)));
 
         assertEquals("Insufficient stock for product: " + product.getId(), ex.getMessage());
     }
 
     @Test
-    void addProductToCart_productStockLessThenUpdateQuantity_shouldThrowInsufficientStockException() {
+    void updateProductToCart_productStockLessThenUpdateQuantity_shouldThrowInsufficientStockException() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -271,13 +269,13 @@ class CartServiceTest {
 
 
         // Then
-        InsufficientStockException ex = assertThrows(InsufficientStockException.class, () -> cartService.addProductToCart(new UpdateCartRequest(product.getId(), addedProductQuantity)));
+        InsufficientStockException ex = assertThrows(InsufficientStockException.class, () -> cartService.updateProductInCart(new UpdateCartRequest(product.getId(), addedProductQuantity)));
 
         assertEquals("Insufficient stock for product: " + product.getId(), ex.getMessage());
     }
 
     @Test
-    void addProductToCart_addingValidProductWithQuantityZero_FourExistingProductInCart_shouldDeleteCartItem() {
+    void updateProductToCart_addingValidProductWithQuantityZero_FourExistingProductInCart_shouldDeleteCartItem() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -297,7 +295,7 @@ class CartServiceTest {
         when(cartRepository.findByUserId(customer.getId())).thenReturn(Optional.of(cart));
         when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())).thenReturn(Optional.of(cartItemResponse));
 
-        cartService.addProductToCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
+        cartService.updateProductInCart(new UpdateCartRequest(product.getId(), addedProductQuantity));
 
         // Then
         verify(cartItemRepository).delete(cartItemCaptor.capture());
@@ -316,7 +314,7 @@ class CartServiceTest {
     }
 
     @Test
-    void addProductToCart_deletingCartItemWithQuantityZero_cartDoesNotExist_shouldThrowCartNotFoundException() {
+    void updateProductInCart_deletingCartItemWithQuantityZero_cartDoesNotExist_shouldThrowCartNotFoundException() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -331,12 +329,12 @@ class CartServiceTest {
         when(cartRepository.findByUserId(customer.getId())).thenReturn(Optional.empty());
 
         // Then
-        CartNotFoundException ex = assertThrows(CartNotFoundException.class, () -> cartService.addProductToCart(new UpdateCartRequest(product.getId(), updateProductQuantity)));
+        CartNotFoundException ex = assertThrows(CartNotFoundException.class, () -> cartService.updateProductInCart(new UpdateCartRequest(product.getId(), updateProductQuantity)));
         assertEquals("Cart not found for user", ex.getMessage());
     }
 
     @Test
-    void addProductToCart_deletingCartItemWithQuantityZero_cartItemDoesNotExist_shouldThrowCartItemNotFoundException() {
+    void updateProductInCart_deletingCartItemWithQuantityZero_cartItemDoesNotExist_shouldThrowCartItemNotFoundException() {
         // Given
         User customer = TestEntityFactory.createCustomer("customer");
         customer.setId(1L);
@@ -354,7 +352,7 @@ class CartServiceTest {
         when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())).thenReturn(Optional.empty());
 
         // Then
-        CartItemNotFoundException ex = assertThrows(CartItemNotFoundException.class, () -> cartService.addProductToCart(new UpdateCartRequest(product.getId(), updateProductQuantity)));
+        CartItemNotFoundException ex = assertThrows(CartItemNotFoundException.class, () -> cartService.updateProductInCart(new UpdateCartRequest(product.getId(), updateProductQuantity)));
         assertEquals("Item not found in Cart", ex.getMessage());
     }
 

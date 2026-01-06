@@ -23,13 +23,13 @@ public class CartController {
         this.cartService = cartService;
     }
 
-
     @Operation(summary = "Updates cart item quantity", description = "Handles adding, updating and deleting from the user's cart based on the productId, and quantity")
-    @PostMapping()
-    public ResponseEntity<CustomApiResponse<Void>> addToCartByProductId(@Valid @RequestBody UpdateCartRequest request) {
-        String message = cartService.addProductToCart(request);
+    @PutMapping()
+    public ResponseEntity<CustomApiResponse<Void>> updateProductInCart(@Valid @RequestBody UpdateCartRequest request) {
+        String message = cartService.updateProductInCart(request);
         return ResponseEntity.ok().body(CustomApiResponse.success(message, null));
     }
+
 
     @Operation(
             summary = "Get user's cart",

@@ -10,7 +10,7 @@ public record TokenResponse(
         String accessToken,
 
         @NotBlank
-        @Schema(description = "Newly issued refresh token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+        @Schema(description = "Newly issued refresh token", example = "d75980fb-2aa0-42e8-a485-ca8c1da6c890")
         String refreshToken
 ) {
 }

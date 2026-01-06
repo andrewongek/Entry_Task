@@ -72,7 +72,7 @@ public class CartService {
     @PreAuthorize("hasRole('CUSTOMER')")
     @Transactional
     @Retryable(retryFor = {OptimisticLockException.class})
-    public String addProductToCart(UpdateCartRequest request) {
+    public String updateProductInCart(UpdateCartRequest request) {
         User customer = authService.getCurrentUser();
 
         if (request.quantity() == 0) {
