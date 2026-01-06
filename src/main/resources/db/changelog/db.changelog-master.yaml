@@ -25,3 +25,7 @@ databaseChangeLog:
       file: db/changelog/changes/012-add-fk-on-delete-cascade-categories.yaml
   - include:
       file: db/changelog/changes/013-add-idempotency-key-to-orders.yaml
+  - include:
+      file: db/changelog/changes/014-add-unique-constraint-and-index-on-product-category-table.yaml
+  - include:
+      file: db/changelog/changes/015-drop-dup-unique-product-categories.yaml

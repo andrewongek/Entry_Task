@@ -31,8 +31,17 @@ public class ProductSpecifications {
 
     public static Specification<Product> categoryIn(List<Long> categoryIds) {
         return (root, query, criteriaBuilder) -> {
-            var join = root.join("categories");
-            return join.get("id").in(categoryIds);
+            var subquery = query.subquery(Long.class);
+            var productSubRoot = subquery.from(Product.class);
+            var categoryJoin = productSubRoot.join("categories");
+
+            subquery.select(criteriaBuilder.literal(1L))
+                    .where(
+                            criteriaBuilder.equal(productSubRoot.get("id"), root.get("id")),
+                            categoryJoin.get("id").in(categoryIds)
+                    );
+
+            return criteriaBuilder.exists(subquery);
         };
     }
 
