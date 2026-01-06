@@ -1,7 +1,6 @@
 package com.entry_task.entry_task.order.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 
 import java.util.List;
 

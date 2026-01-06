@@ -5,7 +5,6 @@ import com.entry_task.entry_task.favourite.service.UserFavouriteService;
 import com.entry_task.entry_task.product.dto.ProductListRequest;
 import com.entry_task.entry_task.product.dto.ProductListResponse;
 import com.entry_task.entry_task.product.dto.ProductListing;
-import com.entry_task.entry_task.product.service.ProductService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

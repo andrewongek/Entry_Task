@@ -2,10 +2,6 @@ package com.entry_task.entry_task.product.dto;
 
 import com.entry_task.entry_task.enums.ProductStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "Product information returned by the API")
 public record ProductInfo(

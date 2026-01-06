@@ -33,6 +33,7 @@ public class OrderItemSpecifications {
                 criteriaBuilder.equal(root.get("id"), orderItemId);
     }
 
+    // TODO : consider create index in db on Order Status field for better performance
     public static Specification<OrderItem> orderStatusIn (List<String> statuses) {
         return (root, query, criteriaBuilder) -> statuses == null || statuses.isEmpty() ? null :
                 root.get("order").get("status").in(statuses);

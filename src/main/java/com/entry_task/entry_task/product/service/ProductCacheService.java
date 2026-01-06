@@ -20,7 +20,7 @@ public class ProductCacheService {
         this.productRepository = productRepository;
     }
 
-    @Cacheable(value = "product:static", key = "#productId", sync=true)
+    @Cacheable(value = "product:static", key = "#productId", sync=true) // sync=true to ensure only one thread loads the data on cache miss
     public ProductStatic getProductStatic(long productId) {
         log.debug("Cache MISS: product:static [{}]", productId);
         ProductStaticProjection p = productRepository.findProductStatic(productId).orElseThrow(ProductNotFoundException::new);

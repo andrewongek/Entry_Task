@@ -1,7 +1,6 @@
 package com.entry_task.entry_task.favourite.service;
 
 import com.entry_task.entry_task.auth.service.AuthService;
-import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.FavouriteNotFoundException;
 import com.entry_task.entry_task.exceptions.ProductAlreadyFavouritedException;
 import com.entry_task.entry_task.product.entity.Product;
@@ -15,7 +14,6 @@ import com.entry_task.entry_task.favourite.repository.UserFavouriteRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 

@@ -4,7 +4,6 @@ import com.entry_task.entry_task.common.dto.Pagination;
 import com.entry_task.entry_task.common.dto.Sort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Request parameters for fetching a list of products with optional filters, pagination, and sorting. Can be left empty for default")
 public record ProductListRequest(

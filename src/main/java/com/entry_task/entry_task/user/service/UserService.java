@@ -1,8 +1,6 @@
 package com.entry_task.entry_task.user.service;
 
 import com.entry_task.entry_task.auth.dto.RegisterRequest;
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
-import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.UserNotFoundException;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
@@ -50,8 +48,6 @@ public class UserService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
     }
-
-
 
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);

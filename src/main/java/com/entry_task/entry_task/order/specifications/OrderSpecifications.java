@@ -12,6 +12,7 @@ public class  OrderSpecifications {
                 cb.equal(root.get("user").get("id"), userId);
     }
 
+    // TODO : consider create index in db on Order Status field for better performance
     public static Specification<Order> statusIn(List<String> statuses) {
         return (root, query, cb) ->
                 root.get("status").in(statuses);

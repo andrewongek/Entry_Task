@@ -1,11 +1,6 @@
 package com.entry_task.entry_task.category.entity;
 
-
-import com.entry_task.entry_task.product.entity.Product;
 import jakarta.persistence.*;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "categories")

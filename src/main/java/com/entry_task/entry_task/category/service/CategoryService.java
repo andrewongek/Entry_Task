@@ -1,6 +1,5 @@
 package com.entry_task.entry_task.category.service;
 
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
 import com.entry_task.entry_task.category.dto.CreateCategoryRequest;
 import com.entry_task.entry_task.category.dto.DeleteCategoryRequest;
 import com.entry_task.entry_task.exceptions.CategoryAlreadyExistsException;

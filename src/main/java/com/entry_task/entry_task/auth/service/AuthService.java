@@ -4,8 +4,6 @@ import com.entry_task.entry_task.auth.dto.LoginRequest;
 import com.entry_task.entry_task.auth.dto.TokenResponse;
 import com.entry_task.entry_task.user.entity.User;
 
-import java.util.Map;
-
 public interface AuthService {
     User getCurrentUser();
 

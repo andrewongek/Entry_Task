@@ -2,7 +2,6 @@ package com.entry_task.entry_task.product.entity;
 
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.category.entity.Category;
-import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.user.entity.User;
 import jakarta.persistence.*;
 
