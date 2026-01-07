@@ -17,12 +17,12 @@ import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.user.entity.User;
 import jakarta.persistence.OptimisticLockException;
-import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CartService {
@@ -70,6 +70,22 @@ public class CartService {
         items.isEmpty() ? null : cartItems.get(0).cartUpdatedAt());
   }
 
+  private String deleteProductFromCart(Long userId, Long productId) {
+    Product product = productService.getActiveProductById(productId);
+    Cart cart =
+      cartRepository
+        .findByUserId(userId)
+        .orElseThrow(() -> new CartNotFoundException("Cart not found for user"));
+    CartItem cartItem =
+      cartItemRepository
+        .findByCartIdAndProductId(cart.getId(), product.getId())
+        .orElseThrow(() -> new CartItemNotFoundException("Item not found in Cart"));
+    cartItemRepository.delete(cartItem);
+    cart.setmTime(Instant.now().getEpochSecond());
+    cartRepository.save(cart);
+    return "deleted from cart";
+  }
+
   @PreAuthorize("hasRole('CUSTOMER')")
   @Transactional
   @Retryable(retryFor = {OptimisticLockException.class})
@@ -113,27 +129,11 @@ public class CartService {
     return "cart updated";
   }
 
-  @Transactional
-  private String deleteProductFromCart(Long userId, Long productId) {
-    Product product = productService.getActiveProductById(productId);
-    Cart cart =
-        cartRepository
-            .findByUserId(userId)
-            .orElseThrow(() -> new CartNotFoundException("Cart not found for user"));
-    CartItem cartItem =
-        cartItemRepository
-            .findByCartIdAndProductId(cart.getId(), product.getId())
-            .orElseThrow(() -> new CartItemNotFoundException("Item not found in Cart"));
-    cartItemRepository.delete(cartItem);
-    cart.setmTime(Instant.now().getEpochSecond());
-    cartRepository.save(cart);
-    return "deleted from cart";
-  }
-
   public List<CartItem> findAllCartItemsByIdAndUser(List<Long> itemIds, User user) {
     return cartItemRepository.findAllByIdAndUser(itemIds, user);
   }
 
+  @Transactional
   public void deleteCartItems(List<CartItem> cartItems) {
     cartItemRepository.deleteAll(cartItems);
   }

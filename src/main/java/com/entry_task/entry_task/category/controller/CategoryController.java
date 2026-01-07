@@ -2,10 +2,12 @@ package com.entry_task.entry_task.category.controller;
 
 import com.entry_task.entry_task.category.dto.CreateCategoryRequest;
 import com.entry_task.entry_task.category.dto.DeleteCategoryRequest;
+import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.service.CategoryService;
 import com.entry_task.entry_task.common.api.CustomApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Set;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +23,12 @@ public class CategoryController {
 
   public CategoryController(CategoryService categoryService) {
     this.categoryService = categoryService;
+  }
+
+  @GetMapping()
+  public ResponseEntity<CustomApiResponse<Set<Category>>> getCategories() {
+    Set<Category> categories = categoryService.getCategories();
+    return ResponseEntity.ok().body(CustomApiResponse.success("success", categories));
   }
 
   @PostMapping()

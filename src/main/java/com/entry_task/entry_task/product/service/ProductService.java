@@ -19,7 +19,6 @@ import com.entry_task.entry_task.product.specifications.ProductSpecifications;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.service.UserService;
 import jakarta.persistence.OptimisticLockException;
-import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -33,6 +32,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
@@ -322,7 +322,6 @@ public class ProductService {
     return productRepository.save(newProduct).getId();
   }
 
-  @Transactional
   private void updateProduct(long productId, UpdateProductRequest request) {
     long now = Instant.now().getEpochSecond();
     String name = request.name().trim();

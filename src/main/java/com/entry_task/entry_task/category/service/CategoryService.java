@@ -6,13 +6,15 @@ import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.repository.CategoryRepository;
 import com.entry_task.entry_task.exceptions.CategoryAlreadyExistsException;
 import com.entry_task.entry_task.exceptions.CategoryNotFoundException;
-import jakarta.transaction.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CategoryService {
@@ -24,9 +26,15 @@ public class CategoryService {
     this.categoryRepository = categoryRepository;
   }
 
+  @Cacheable(value = "categories", key = "'all'", sync = true)
+  public Set<Category> getCategories() {
+    return new HashSet<>(categoryRepository.findAll());
+  }
+
   @Transactional
+  @CacheEvict(value = "categories", key = "'all'", beforeInvocation = true)
   public void createCategory(CreateCategoryRequest createCategoryRequest) {
-    Category category = new Category(createCategoryRequest.name().trim());
+    Category category = new Category(createCategoryRequest.name().trim().toLowerCase());
     try {
       categoryRepository.save(category);
       log.info("Category created: categoryId={}", category.getId());
@@ -37,6 +45,7 @@ public class CategoryService {
   }
 
   @Transactional
+  @CacheEvict(value = "categories", key = "'all'", beforeInvocation = true)
   public void deleteCategory(DeleteCategoryRequest request) {
     Category category =
         categoryRepository

@@ -176,7 +176,7 @@ class OrderServiceTest {
     OrderListRequest request =
         new OrderListRequest(
             new Pagination(PAGE, SIZE),
-            new OrderFilter(List.of(OrderStatus.CREATED.name())),
+            new OrderFilter(List.of(OrderStatus.CREATED)),
             new Sort("cTime", "ASC"));
 
     // When

@@ -15,7 +15,6 @@ import com.entry_task.entry_task.order.specifications.OrderSpecifications;
 import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.service.ProductService;
 import com.entry_task.entry_task.user.entity.User;
-import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
@@ -28,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {

@@ -1,5 +1,6 @@
 package com.entry_task.entry_task.order.specifications;
 
+import com.entry_task.entry_task.enums.OrderStatus;
 import com.entry_task.entry_task.order.entity.OrderItem;
 import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,7 +40,7 @@ public class OrderItemSpecifications {
   }
 
   // TODO : consider create index in db on Order Status field for better performance
-  public static Specification<OrderItem> orderStatusIn(List<String> statuses) {
+  public static Specification<OrderItem> orderStatusIn(List<OrderStatus> statuses) {
     return (root, query, criteriaBuilder) ->
         statuses == null || statuses.isEmpty()
             ? null
