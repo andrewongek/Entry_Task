@@ -8,8 +8,7 @@ import org.springframework.retry.annotation.EnableRetry;
 @EnableRetry
 public class CardShopApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(CardShopApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(CardShopApplication.class, args);
+  }
 }

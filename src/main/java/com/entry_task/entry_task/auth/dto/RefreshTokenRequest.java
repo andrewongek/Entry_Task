@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "Request parameters for refreshing authentication token")
 public record RefreshTokenRequest(
-        @NotBlank
-        @Schema(description = "Refresh token issued during authentication", example = "d75980fb-2aa0-42e8-a485-ca8c1da6c890")
-        String refreshToken
-) {
-}
+    @NotBlank
+        @Schema(
+            description = "Refresh token issued during authentication",
+            example = "d75980fb-2aa0-42e8-a485-ca8c1da6c890")
+        String refreshToken) {}

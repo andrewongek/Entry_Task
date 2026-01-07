@@ -5,12 +5,13 @@ import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "Response containing newly issued access and refresh tokens")
 public record TokenResponse(
-        @NotBlank
-        @Schema(description = "Newly issued access token", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    @NotBlank
+        @Schema(
+            description = "Newly issued access token",
+            example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
         String accessToken,
-
-        @NotBlank
-        @Schema(description = "Newly issued refresh token", example = "d75980fb-2aa0-42e8-a485-ca8c1da6c890")
-        String refreshToken
-) {
-}
+    @NotBlank
+        @Schema(
+            description = "Newly issued refresh token",
+            example = "d75980fb-2aa0-42e8-a485-ca8c1da6c890")
+        String refreshToken) {}

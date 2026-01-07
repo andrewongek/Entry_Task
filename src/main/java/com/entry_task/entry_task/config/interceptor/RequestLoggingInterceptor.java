@@ -10,28 +10,29 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class RequestLoggingInterceptor implements HandlerInterceptor {
-    private static final Logger logger = LoggerFactory.getLogger(RequestLoggingInterceptor.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestLoggingInterceptor.class);
 
-    @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        long startTime = System.currentTimeMillis();
+  @Override
+  public boolean preHandle(
+      HttpServletRequest request, HttpServletResponse response, Object handler) {
+    long startTime = System.currentTimeMillis();
 
-        logger.info("Request URI: {} | Method: {}", request.getRequestURI(), request.getMethod());
+    logger.info("Request URI: {} | Method: {}", request.getRequestURI(), request.getMethod());
 
-        MDC.put("requestStartTime", String.valueOf(startTime));
-        MDC.put("requestUri", request.getRequestURI());
+    MDC.put("requestStartTime", String.valueOf(startTime));
+    MDC.put("requestUri", request.getRequestURI());
 
-        return true;
-    }
+    return true;
+  }
 
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
-                                Object handler, Exception ex) {
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - Long.parseLong(MDC.get("requestStartTime"));
+  @Override
+  public void afterCompletion(
+      HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    long endTime = System.currentTimeMillis();
+    long duration = endTime - Long.parseLong(MDC.get("requestStartTime"));
 
-        logger.info("Response Status: {} | Duration: {} ms", response.getStatus(), duration);
+    logger.info("Response Status: {} | Duration: {} ms", response.getStatus(), duration);
 
-        MDC.clear();
-    }
+    MDC.clear();
+  }
 }

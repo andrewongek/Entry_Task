@@ -7,7 +7,7 @@ This assignment is designed for developers to build a Spring Boot application fo
 1) Create the BE for an E-Commerce Store using Spring Boot  
 2) Support 3 different user types. Customer, Seller and Admins
 
-## Core Functionalities:
+## Core Requirements:
 
 ### Sellers
 

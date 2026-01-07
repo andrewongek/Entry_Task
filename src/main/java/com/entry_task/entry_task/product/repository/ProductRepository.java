@@ -5,6 +5,7 @@ import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.repository.projections.ProductDetailProjection;
 import com.entry_task.entry_task.product.repository.projections.ProductDynamicProjection;
 import com.entry_task.entry_task.product.repository.projections.ProductStaticProjection;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,36 +14,34 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import java.util.Optional;
-
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
+public interface ProductRepository
+    extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+  @Modifying(clearAutomatically = true, flushAutomatically = true)
+  @Query(
+      """
                 UPDATE Product p
                 SET p.stock = p.stock - :qty
                 WHERE p.id = :id
                   AND p.stock >= :qty
                   AND p.productStatus = com.entry_task.entry_task.enums.ProductStatus.ACTIVE
             """)
-    int reserveStock(@Param("id") long id, @Param("qty") int qty);
+  int reserveStock(@Param("id") long id, @Param("qty") int qty);
 
-    @EntityGraph(attributePaths = "seller")
-    @NonNull
-    Page<Product> findAll(
-            @Nullable Specification<Product> spec,
-            @NonNull Pageable pageable
-    );
+  @EntityGraph(attributePaths = "seller")
+  @NonNull
+  Page<Product> findAll(@Nullable Specification<Product> spec, @NonNull Pageable pageable);
 
-    @Query("""
+  @Query(
+      """
                 select count(p) > 0
                 from Product p
                 where p.id = :productId
                   and p.seller.id = :sellerId
             """)
-    boolean isOwnedBySeller(@Param("productId") long productId,
-                            @Param("sellerId") long sellerId);
+  boolean isOwnedBySeller(@Param("productId") long productId, @Param("sellerId") long sellerId);
 
-    @Query("""
+  @Query(
+      """
                     select
                         p.id as id,
                         p.name as name,
@@ -59,24 +58,24 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                     left join p.categories c
                     where p.id = :productId
             """)
-    Optional<ProductDetailProjection> findProductDetail(@Param("productId") long productId);
+  Optional<ProductDetailProjection> findProductDetail(@Param("productId") long productId);
 
-    @Modifying
-    @Query("""
+  @Modifying
+  @Query(
+      """
                 update Product p
                 set p.productStatus = :newStatus
                 where p.id = :productId
                   and p.productStatus = :expectedCurrent
             """)
-    int updateStatusIfCurrent(
-            @Param("productId") Long productId,
-            @Param("expectedCurrent") ProductStatus expectedCurrent,
-            @Param("newStatus") ProductStatus newStatus
-    );
+  int updateStatusIfCurrent(
+      @Param("productId") Long productId,
+      @Param("expectedCurrent") ProductStatus expectedCurrent,
+      @Param("newStatus") ProductStatus newStatus);
 
-
-    @Modifying
-    @Query("""
+  @Modifying
+  @Query(
+      """
                 update Product p
                 set
                     p.name = :name,
@@ -86,16 +85,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                     p.mTime = :mTime
                 where p.id = :productId
             """)
-    int updateProduct(
-            @Param("productId") long productId,
-            @Param("name") String name,
-            @Param("price") int price,
-            @Param("stock") int stock,
-            @Param("description") String description,
-            @Param("mTime") long mTime
-    );
+  int updateProduct(
+      @Param("productId") long productId,
+      @Param("name") String name,
+      @Param("price") int price,
+      @Param("stock") int stock,
+      @Param("description") String description,
+      @Param("mTime") long mTime);
 
-    @Query("""
+  @Query(
+      """
                 select
                     p.id as id,
                     p.name as name,
@@ -108,14 +107,15 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                 left join p.categories c
                 where p.id = :productId
             """)
-    Optional<ProductStaticProjection> findProductStatic(@Param("productId") long productId);
+  Optional<ProductStaticProjection> findProductStatic(@Param("productId") long productId);
 
-    @Query("""
+  @Query(
+      """
                 select
                     p.stock as stock,
                     p.price as price
                 from Product p
                 where p.id = :productId
             """)
-    Optional<ProductDynamicProjection> findProductDynamic(@Param("productId") long productId);
+  Optional<ProductDynamicProjection> findProductDynamic(@Param("productId") long productId);
 }
