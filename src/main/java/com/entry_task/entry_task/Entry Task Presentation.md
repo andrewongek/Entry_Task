@@ -130,12 +130,8 @@ Why Monoliths
 
 ### Authorisation Framework
 
-| JWT | Oauth2 |
-| :---- | :---- |
-| Simple to implement and configure | More complexity and configuration (IdP setup, flows, redirects, client configs) |
-| Simple RBAC (roles/authorities in claims) | More Complex implementation (Potential overkill for this project) |
-
-* For this project **JWT with Spring Security** is the cleanest because it achieves stateless auth with minimal infrastructure and keeps the focus on the API and business logic.
+* For this project i want to try to implement the core IAM featues to better understand so i will use **JWT with Spring Security** is the cleanest because it achieves stateless auth with minimal infrastructure and keeps the focus on the API and business logic.
+* want to implement the access-token refresh-token flow to balance security and usability.
 
 ### Database Design
 
