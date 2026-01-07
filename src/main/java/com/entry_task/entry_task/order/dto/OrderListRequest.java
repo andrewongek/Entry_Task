@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
         "Request parameters to fetch a paginated list of orders with optional filters and sorting")
 public record OrderListRequest(
     @Schema(description = "Pagination settings for the order list") @Valid Pagination pagination,
-    @Schema(description = "Filters to apply on the order list") OrderFilter filter,
+    @Schema(description = "Filters to apply on the order list") @Valid OrderFilter filter,
     @Schema(description = "Sorting options for the order list") @Valid Sort sort) {
   public OrderListRequest {
     if (pagination == null) {

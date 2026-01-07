@@ -8,7 +8,8 @@ import jakarta.validation.Valid;
 public record SellerOrderInvoiceItemListRequest(
     @Schema(description = "Pagination settings for the order invoice item list") @Valid
         Pagination pagination,
-    @Schema(description = "Filters to apply on the order invoice item list") OrderItemFilter filter,
+    @Schema(description = "Filters to apply on the order invoice item list") @Valid
+        OrderItemFilter filter,
     @Schema(description = "Sorting options for the order invoice item list") @Valid Sort sort) {
   public SellerOrderInvoiceItemListRequest {
     if (pagination == null) {

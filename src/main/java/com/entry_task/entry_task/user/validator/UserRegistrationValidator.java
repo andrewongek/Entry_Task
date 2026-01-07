@@ -14,23 +14,11 @@ public class UserRegistrationValidator {
   }
 
   public void validateRegistrationRequest(RegisterRequest registerRequest) {
-    if (registerRequest.username() == null || registerRequest.username().isBlank()) {
-      throw new IllegalArgumentException("Username cannot be empty");
-    }
-
-    if (registerRequest.password() == null || registerRequest.password().length() < 6) {
-      throw new IllegalArgumentException("Password must be at least 6 characters long");
-    }
-
-    if (registerRequest.email() == null || registerRequest.email().isBlank()) {
-      throw new IllegalArgumentException("Email cannot be empty");
-    }
-
-    if (userRepository.findByUsername(registerRequest.username()).isPresent()) {
+    if (userRepository.findByUsername(registerRequest.username().trim()).isPresent()) {
       throw new IllegalArgumentException("Username is already taken");
     }
 
-    if (userRepository.findByEmail(registerRequest.email()).isPresent()) {
+    if (userRepository.findByEmail(registerRequest.email().trim().toLowerCase()).isPresent()) {
       throw new IllegalArgumentException("Email is already registered");
     }
   }

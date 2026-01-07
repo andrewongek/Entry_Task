@@ -63,10 +63,10 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public TokenResponse login(LoginRequest loginRequest) {
+    String username = loginRequest.username().trim();
     Authentication authentication =
         authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                loginRequest.username(), loginRequest.password()));
+            new UsernamePasswordAuthenticationToken(username, loginRequest.password()));
 
     UserDetails userDetails = (UserDetails) authentication.getPrincipal();
     String accessToken = jwtUtil.generateToken(userDetails.getUsername());

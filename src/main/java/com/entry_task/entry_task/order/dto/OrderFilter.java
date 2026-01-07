@@ -1,6 +1,8 @@
 package com.entry_task.entry_task.order.dto;
 
+import com.entry_task.entry_task.enums.OrderStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 @Schema(description = "Filter criteria for orders")
@@ -12,4 +14,4 @@ public record OrderFilter(
                     + "CREATED, PAID, SHIPPED, COMPLETED, CANCELLED. "
                     + "If multiple statuses are provided, orders matching any of the statuses will be returned.",
             example = "[\"PAID\", \"SHIPPED\"]")
-        List<String> statuses) {}
+        List<@NotNull OrderStatus> statuses) {}

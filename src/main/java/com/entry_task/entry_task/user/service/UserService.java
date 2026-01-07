@@ -42,10 +42,13 @@ public class UserService {
   }
 
   private void register(RegisterRequest registerRequest) {
+    String username = registerRequest.username().trim();
+    String email = registerRequest.email().trim().toLowerCase();
+
     User newUser =
         new User(
-            registerRequest.username(),
-            registerRequest.email(),
+            username,
+            email,
             passwordEncoder.encode(registerRequest.password()),
             registerRequest.role());
     newUser = userRepository.save(newUser);
@@ -64,8 +67,8 @@ public class UserService {
     return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
   }
 
-  public User getSellerById(Long sellerId) {
-    return userRepository.findSellerById(sellerId).orElseThrow(UserNotFoundException::new);
+  public void getSellerById(Long sellerId) {
+    userRepository.findSellerById(sellerId).orElseThrow(UserNotFoundException::new);
   }
 
   public User findUserBySellerId(Long sellerId) {

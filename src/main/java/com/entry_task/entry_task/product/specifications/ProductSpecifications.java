@@ -19,7 +19,7 @@ public class ProductSpecifications {
             criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%");
   }
 
-  public static Specification<Product> statusIn(List<Integer> statuses) {
+  public static Specification<Product> statusIn(List<ProductStatus> statuses) {
     return (root, query, criteriaBuilder) -> root.get("productStatus").in(statuses);
   }
 

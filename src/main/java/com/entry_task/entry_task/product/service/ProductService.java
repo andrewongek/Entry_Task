@@ -306,14 +306,16 @@ public class ProductService {
 
   private Long createProduct(CreateProductRequest request, User seller) {
     long now = Instant.now().getEpochSecond();
+    String name = request.name().trim();
+    String description = request.description().trim();
     Product newProduct =
         new Product(
-            request.name(),
+            name,
             seller,
             request.stock(),
             request.price(),
             categoryService.loadCategories(request.categoryIds()),
-            request.description(),
+            description,
             ProductStatus.ACTIVE,
             now,
             now);
@@ -323,14 +325,11 @@ public class ProductService {
   @Transactional
   private void updateProduct(long productId, UpdateProductRequest request) {
     long now = Instant.now().getEpochSecond();
+    String name = request.name().trim();
+    String description = request.description().trim();
     int updated =
         productRepository.updateProduct(
-            productId,
-            request.name(),
-            request.price(),
-            request.stock(),
-            request.description(),
-            now);
+            productId, name, request.price(), request.stock(), description, now);
     if (updated == 0) {
       throw new ProductNotFoundException();
     }
