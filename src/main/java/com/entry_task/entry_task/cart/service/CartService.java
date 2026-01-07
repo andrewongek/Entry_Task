@@ -73,13 +73,13 @@ public class CartService {
   private String deleteProductFromCart(Long userId, Long productId) {
     Product product = productService.getActiveProductById(productId);
     Cart cart =
-      cartRepository
-        .findByUserId(userId)
-        .orElseThrow(() -> new CartNotFoundException("Cart not found for user"));
+        cartRepository
+            .findByUserId(userId)
+            .orElseThrow(() -> new CartNotFoundException("Cart not found for user"));
     CartItem cartItem =
-      cartItemRepository
-        .findByCartIdAndProductId(cart.getId(), product.getId())
-        .orElseThrow(() -> new CartItemNotFoundException("Item not found in Cart"));
+        cartItemRepository
+            .findByCartIdAndProductId(cart.getId(), product.getId())
+            .orElseThrow(() -> new CartItemNotFoundException("Item not found in Cart"));
     cartItemRepository.delete(cartItem);
     cart.setmTime(Instant.now().getEpochSecond());
     cartRepository.save(cart);

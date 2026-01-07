@@ -28,8 +28,7 @@ public class CategoryController {
 
   @Operation(
       summary = "Get all categories",
-      description = "Retrieves a set of all available categories in the system."
-  )
+      description = "Retrieves a set of all available categories in the system.")
   @GetMapping()
   public ResponseEntity<CustomApiResponse<Set<Category>>> getCategories() {
     Set<Category> categories = categoryService.getCategories();
@@ -38,8 +37,7 @@ public class CategoryController {
 
   @Operation(
       summary = "Create a new category",
-      description = "Creates a new category with the provided details."
-  )
+      description = "Creates a new category with the provided details.")
   @PostMapping()
   public ResponseEntity<CustomApiResponse<Void>> createCategory(
       @Valid @RequestBody CreateCategoryRequest request) {
@@ -49,8 +47,7 @@ public class CategoryController {
 
   @Operation(
       summary = "Delete a category",
-      description = "Deletes an existing category based on the provided identifier."
-  )
+      description = "Deletes an existing category based on the provided identifier.")
   @DeleteMapping()
   public ResponseEntity<CustomApiResponse<Void>> deleteCategory(
       @Valid @RequestBody DeleteCategoryRequest request) {

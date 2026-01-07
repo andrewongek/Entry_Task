@@ -59,6 +59,8 @@ public class WebSecurityConfig {
                         "/api/auth/refresh",
                         "/api/auth/logout")
                     .permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/category/**")
+                    .permitAll()
                     .requestMatchers(
                         "/api/products/**", "/api/cart/**", "/api/favourites/**", "/api/orders/**")
                     .hasRole("CUSTOMER")
