@@ -16,6 +16,7 @@ import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.exceptions.ProductNotActiveException;
 import com.entry_task.entry_task.product.dto.*;
 import com.entry_task.entry_task.product.entity.Product;
+import com.entry_task.entry_task.product.mapper.ProductMapper;
 import com.entry_task.entry_task.product.repository.ProductRepository;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.service.UserService;
@@ -48,6 +49,8 @@ class ProductServiceTest {
   @Mock private UserService userService;
 
   @Mock private CategoryService categoryService;
+
+  @Mock private ProductMapper productMapper;
 
   @Test
   void getActiveProductById_productIsActive_shouldReturnProduct() {
@@ -131,7 +134,13 @@ class ProductServiceTest {
 
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-
+    when(productMapper.productToProductListing(any(Product.class)))
+        .thenAnswer(
+            invocation -> {
+              Product p = invocation.getArgument(0);
+              return new ProductListing(
+                  p.getId(), p.getName(), p.getSeller().getId(), p.getStock(), p.getPrice());
+            });
     // When
     ProductListResponse<ProductListing> response =
         productService.getUserProductListingList(request, SELLER_ID);
@@ -181,7 +190,19 @@ class ProductServiceTest {
 
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-
+    when(productMapper.productToProductInfo(any(Product.class)))
+        .thenAnswer(
+            invocation -> {
+              Product p = invocation.getArgument(0);
+              return new ProductInfo(
+                  p.getId(),
+                  p.getName(),
+                  p.getSeller().getId(),
+                  p.getStock(),
+                  p.getPrice(),
+                  p.getDescription(),
+                  p.getProductStatus());
+            });
     // When
     ProductListResponse<ProductInfo> response = productService.getSellerProductInfoList(request);
 
@@ -235,7 +256,19 @@ class ProductServiceTest {
 
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-
+    when(productMapper.productToProductInfo(any(Product.class)))
+        .thenAnswer(
+            invocation -> {
+              Product p = invocation.getArgument(0);
+              return new ProductInfo(
+                  p.getId(),
+                  p.getName(),
+                  p.getSeller().getId(),
+                  p.getStock(),
+                  p.getPrice(),
+                  p.getDescription(),
+                  p.getProductStatus());
+            });
     // When
     ProductListResponse<ProductInfo> response =
         productService.getAdminProductInfoList(request, SELLER_ID);
@@ -287,7 +320,13 @@ class ProductServiceTest {
     // Mock repository to return the page
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-
+    when(productMapper.productToProductListing(any(Product.class)))
+        .thenAnswer(
+            invocation -> {
+              Product p = invocation.getArgument(0);
+              return new ProductListing(
+                  p.getId(), p.getName(), p.getSeller().getId(), p.getStock(), p.getPrice());
+            });
     // When
     var response = productService.getUserFavouriteProductListingList(request);
 

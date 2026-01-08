@@ -16,7 +16,7 @@ public class Product {
 
   private String name;
 
-  @ManyToOne
+  @ManyToOne // Defaults Eager fetching
   @JoinColumn(name = "seller_id")
   private User seller;
 

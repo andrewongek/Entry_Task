@@ -13,6 +13,7 @@ import com.entry_task.entry_task.product.dto.*;
 import com.entry_task.entry_task.product.dto.cache.ProductDynamic;
 import com.entry_task.entry_task.product.dto.cache.ProductStatic;
 import com.entry_task.entry_task.product.entity.Product;
+import com.entry_task.entry_task.product.mapper.ProductMapper;
 import com.entry_task.entry_task.product.repository.ProductRepository;
 import com.entry_task.entry_task.product.repository.projections.ProductDetailProjection;
 import com.entry_task.entry_task.product.specifications.ProductSpecifications;
@@ -44,18 +45,21 @@ public class ProductService {
   private final CategoryService categoryService;
   private final ProductCacheService productCacheService;
   private final ProductRepository productRepository;
+  private final ProductMapper productMapper;
 
   public ProductService(
       AuthService authService,
       UserService userService,
       CategoryService categoryService,
       ProductCacheService productCacheService,
-      ProductRepository productRepository) {
+      ProductRepository productRepository,
+      ProductMapper productMapper1) {
     this.authService = authService;
     this.userService = userService;
     this.categoryService = categoryService;
     this.productCacheService = productCacheService;
     this.productRepository = productRepository;
+    this.productMapper = productMapper1;
   }
 
   public ProductInfo getProductInfo(long productId) {
@@ -256,7 +260,13 @@ public class ProductService {
       specification =
           specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
     }
-    return productRepository.findAll(specification, pageable).map(this::toProductInfo);
+    System.out.println("SORT = " + request.sort());
+    System.out.println(
+        "ORDER = " + (request.sort() == null ? "null-sort" : request.sort().order()));
+    System.out.println("FIELD = " + request.sort().field());
+    return productRepository
+        .findAll(specification, pageable)
+        .map(productMapper::productToProductInfo);
   }
 
   private Page<ProductListing> getProductListingList(ProductListRequest request, Long sellerId) {
@@ -279,7 +289,10 @@ public class ProductService {
       specification =
           specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
     }
-    return productRepository.findAll(specification, pageable).map(this::toProductListing);
+
+    return productRepository
+        .findAll(specification, pageable)
+        .map(productMapper::productToProductListing);
   }
 
   private Page<ProductListing> getUserFavouriteProductListingList(
@@ -301,7 +314,9 @@ public class ProductService {
       specification =
           specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
     }
-    return productRepository.findAll(specification, pageable).map(this::toProductListing);
+    return productRepository
+        .findAll(specification, pageable)
+        .map(productMapper::productToProductListing);
   }
 
   private Long createProduct(CreateProductRequest request, User seller) {
