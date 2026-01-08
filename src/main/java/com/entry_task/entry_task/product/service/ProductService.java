@@ -4,6 +4,7 @@ import com.entry_task.entry_task.auth.service.AuthService;
 import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.service.CategoryService;
 import com.entry_task.entry_task.common.dto.Metadata;
+import com.entry_task.entry_task.common.mapper.PageMapper;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.InsufficientStockException;
@@ -46,6 +47,7 @@ public class ProductService {
   private final ProductCacheService productCacheService;
   private final ProductRepository productRepository;
   private final ProductMapper productMapper;
+  private final PageMapper pageMapper;
 
   public ProductService(
       AuthService authService,
@@ -53,13 +55,15 @@ public class ProductService {
       CategoryService categoryService,
       ProductCacheService productCacheService,
       ProductRepository productRepository,
-      ProductMapper productMapper1) {
+      ProductMapper productMapper,
+      PageMapper pageMapper) {
     this.authService = authService;
     this.userService = userService;
     this.categoryService = categoryService;
     this.productCacheService = productCacheService;
     this.productRepository = productRepository;
-    this.productMapper = productMapper1;
+    this.productMapper = productMapper;
+    this.pageMapper = pageMapper;
   }
 
   public ProductInfo getProductInfo(long productId) {
@@ -69,14 +73,7 @@ public class ProductService {
     if (productStatic.status() == ProductStatus.DELETED) throw new ProductNotFoundException();
 
     ProductDynamic productDynamic = productCacheService.getProductDynamic(productId);
-    return new ProductInfo(
-        productStatic.id(),
-        productStatic.name(),
-        productStatic.sellerId(),
-        productDynamic.stock(),
-        productDynamic.price(),
-        productStatic.description(),
-        productStatic.status());
+    return productMapper.toProductInfo(productStatic, productDynamic);
   }
 
   public Product getActiveProductById(long productId) {
@@ -92,17 +89,7 @@ public class ProductService {
     validateProductOwnership(productId);
     ProductDetailProjection p =
         productRepository.findProductDetail(productId).orElseThrow(ProductNotFoundException::new);
-    return new ProductDetailResponse(
-        p.getId(),
-        p.getName(),
-        p.getSellerId(),
-        p.getStock(),
-        p.getPrice(),
-        p.getCategoryIds(),
-        p.getDescription(),
-        p.getProductStatus(),
-        p.getCTime(),
-        p.getMTime());
+    return productMapper.toProductDetailResponse(p);
   }
 
   public ProductListResponse<ProductListing> getUserProductListingList(
@@ -120,9 +107,7 @@ public class ProductService {
     User currentUser = authService.getCurrentUser();
     Long sellerId = currentUser.getId();
     Page<ProductInfo> page = getProductInfoList(request, sellerId);
-    return new ProductListResponse<>(
-        page.toList(),
-        new Metadata(page.getTotalElements(), page.getNumber(), page.getSize(), page.hasNext()));
+    return pageMapper.toProductListResponse(page);
   }
 
   @PreAuthorize("hasRole('ADMIN')")
@@ -132,18 +117,14 @@ public class ProductService {
       userService.validateSellerId(sellerId);
     }
     Page<ProductInfo> page = getProductInfoList(request, sellerId);
-    return new ProductListResponse<>(
-        page.toList(),
-        new Metadata(page.getTotalElements(), page.getNumber(), page.getSize(), page.hasNext()));
+    return pageMapper.toProductListResponse(page);
   }
 
   public ProductListResponse<ProductListing> getUserFavouriteProductListingList(
       ProductListRequest request) {
     Page<ProductListing> page =
         getUserFavouriteProductListingList(request, authService.getCurrentUser().getId());
-    return new ProductListResponse<>(
-        page.toList(),
-        new Metadata(page.getTotalElements(), page.getNumber(), page.getSize(), page.hasNext()));
+    return pageMapper.toProductListResponse(page);
   }
 
   @Transactional
@@ -264,9 +245,7 @@ public class ProductService {
     System.out.println(
         "ORDER = " + (request.sort() == null ? "null-sort" : request.sort().order()));
     System.out.println("FIELD = " + request.sort().field());
-    return productRepository
-        .findAll(specification, pageable)
-        .map(productMapper::productToProductInfo);
+    return productRepository.findAll(specification, pageable).map(productMapper::toProductInfo);
   }
 
   private Page<ProductListing> getProductListingList(ProductListRequest request, Long sellerId) {
@@ -290,9 +269,7 @@ public class ProductService {
           specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
     }
 
-    return productRepository
-        .findAll(specification, pageable)
-        .map(productMapper::productToProductListing);
+    return productRepository.findAll(specification, pageable).map(productMapper::toProductListing);
   }
 
   private Page<ProductListing> getUserFavouriteProductListingList(
@@ -314,9 +291,7 @@ public class ProductService {
       specification =
           specification.and(ProductSpecifications.categoryIn(request.filter().categoryIds()));
     }
-    return productRepository
-        .findAll(specification, pageable)
-        .map(productMapper::productToProductListing);
+    return productRepository.findAll(specification, pageable).map(productMapper::toProductListing);
   }
 
   private Long createProduct(CreateProductRequest request, User seller) {
@@ -383,25 +358,5 @@ public class ProductService {
     if (!owned) {
       throw new AccessDeniedException("You do not own this product");
     }
-  }
-
-  private ProductListing toProductListing(Product product) {
-    return new ProductListing(
-        product.getId(),
-        product.getName(),
-        product.getSeller().getId(),
-        product.getStock(),
-        product.getPrice());
-  }
-
-  private ProductInfo toProductInfo(Product product) {
-    return new ProductInfo(
-        product.getId(),
-        product.getName(),
-        product.getSeller().getId(),
-        product.getStock(),
-        product.getPrice(),
-        product.getDescription(),
-        product.getProductStatus());
   }
 }

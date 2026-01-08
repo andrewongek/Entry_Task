@@ -5,6 +5,7 @@ import com.entry_task.entry_task.cart.entity.CartItem;
 import com.entry_task.entry_task.cart.service.CartService;
 import com.entry_task.entry_task.common.dto.Metadata;
 import com.entry_task.entry_task.exceptions.InvalidCartItemException;
+import com.entry_task.entry_task.order.OrderMapper;
 import com.entry_task.entry_task.order.dto.*;
 import com.entry_task.entry_task.order.entity.Order;
 import com.entry_task.entry_task.order.entity.OrderItem;
@@ -39,18 +40,21 @@ public class OrderService {
   private final AuthService authService;
   private final CartService cartService;
   private final ProductService productService;
+  private final OrderMapper orderMapper;
 
   public OrderService(
       OrderRepository orderRepository,
       OrderItemRepository orderItemRepository,
       AuthService authService,
       CartService cartService,
-      ProductService productService) {
+      ProductService productService,
+      OrderMapper orderMapper) {
     this.orderRepository = orderRepository;
     this.orderItemRepository = orderItemRepository;
     this.authService = authService;
     this.cartService = cartService;
     this.productService = productService;
+    this.orderMapper = orderMapper;
   }
 
   @Transactional
@@ -124,8 +128,8 @@ public class OrderService {
         order.getId(),
         order.getStatus().name(),
         order.getTotalAmount(),
-        order.getcTime(),
-        order.getmTime());
+        order.getCTime(),
+        order.getMTime());
   }
 
   @PreAuthorize("hasRole('CUSTOMER')")
@@ -183,8 +187,8 @@ public class OrderService {
         order.getTotalAmount(),
         orderItemResponses,
         order.getStatus(),
-        order.getcTime(),
-        order.getmTime());
+        order.getCTime(),
+        order.getMTime());
   }
 
   @PreAuthorize("hasRole('SELLER')")
@@ -230,22 +234,7 @@ public class OrderService {
     }
 
     Page<OrderInvoiceItemResponse> page =
-        orderItemRepository
-            .findAll(spec, pageable)
-            .map(
-                orderItem ->
-                    new OrderInvoiceItemResponse(
-                        orderItem.getId(),
-                        orderItem.getOrder().getId(),
-                        orderItem.getOrder().getUser().getId(),
-                        orderItem.getProduct().getId(),
-                        orderItem.getProduct().getName(),
-                        orderItem.getQuantity(),
-                        orderItem.getPrice(),
-                        orderItem.getQuantity() * orderItem.getPrice(),
-                        orderItem.getOrder().getStatus().name(),
-                        orderItem.getOrder().getcTime(),
-                        orderItem.getOrder().getmTime()));
+        orderItemRepository.findAll(spec, pageable).map(orderMapper::toOrderInvoiceItemResponse);
 
     return new OrderInvoiceItemListResponse(
         page.toList(),
@@ -282,22 +271,7 @@ public class OrderService {
     }
 
     Page<OrderInvoiceItemResponse> page =
-        orderItemRepository
-            .findAll(spec, pageable)
-            .map(
-                orderItem ->
-                    new OrderInvoiceItemResponse(
-                        orderItem.getId(),
-                        orderItem.getOrder().getId(),
-                        orderItem.getOrder().getUser().getId(),
-                        orderItem.getProduct().getId(),
-                        orderItem.getProduct().getName(),
-                        orderItem.getQuantity(),
-                        orderItem.getPrice(),
-                        orderItem.getQuantity() * orderItem.getPrice(),
-                        orderItem.getOrder().getStatus().name(),
-                        orderItem.getOrder().getcTime(),
-                        orderItem.getOrder().getmTime()));
+        orderItemRepository.findAll(spec, pageable).map(orderMapper::toOrderInvoiceItemResponse);
 
     return new OrderInvoiceItemListResponse(
         page.toList(),

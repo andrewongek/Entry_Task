@@ -12,6 +12,7 @@ import com.entry_task.entry_task.common.TestEntityFactory;
 import com.entry_task.entry_task.common.dto.Metadata;
 import com.entry_task.entry_task.common.dto.Pagination;
 import com.entry_task.entry_task.common.dto.Sort;
+import com.entry_task.entry_task.common.mapper.PageMapper;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.exceptions.ProductNotActiveException;
 import com.entry_task.entry_task.product.dto.*;
@@ -51,6 +52,8 @@ class ProductServiceTest {
   @Mock private CategoryService categoryService;
 
   @Mock private ProductMapper productMapper;
+
+  @Mock private PageMapper pageMapper;
 
   @Test
   void getActiveProductById_productIsActive_shouldReturnProduct() {
@@ -134,7 +137,7 @@ class ProductServiceTest {
 
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-    when(productMapper.productToProductListing(any(Product.class)))
+    when(productMapper.toProductListing(any(Product.class)))
         .thenAnswer(
             invocation -> {
               Product p = invocation.getArgument(0);
@@ -190,7 +193,7 @@ class ProductServiceTest {
 
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-    when(productMapper.productToProductInfo(any(Product.class)))
+    when(productMapper.toProductInfo(any(Product.class)))
         .thenAnswer(
             invocation -> {
               Product p = invocation.getArgument(0);
@@ -202,6 +205,14 @@ class ProductServiceTest {
                   p.getPrice(),
                   p.getDescription(),
                   p.getProductStatus());
+            });
+    when(pageMapper.toProductListResponse(any(Page.class)))
+        .thenAnswer(
+            invocation -> {
+              Page<?> p = invocation.getArgument(0);
+              return new ProductListResponse<>(
+                  p.getContent(),
+                  new Metadata(p.getTotalElements(), p.getNumber(), p.getSize(), p.hasNext()));
             });
     // When
     ProductListResponse<ProductInfo> response = productService.getSellerProductInfoList(request);
@@ -256,7 +267,7 @@ class ProductServiceTest {
 
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-    when(productMapper.productToProductInfo(any(Product.class)))
+    when(productMapper.toProductInfo(any(Product.class)))
         .thenAnswer(
             invocation -> {
               Product p = invocation.getArgument(0);
@@ -268,6 +279,14 @@ class ProductServiceTest {
                   p.getPrice(),
                   p.getDescription(),
                   p.getProductStatus());
+            });
+    when(pageMapper.toProductListResponse(any(Page.class)))
+        .thenAnswer(
+            invocation -> {
+              Page<?> p = invocation.getArgument(0);
+              return new ProductListResponse<>(
+                  p.getContent(),
+                  new Metadata(p.getTotalElements(), p.getNumber(), p.getSize(), p.hasNext()));
             });
     // When
     ProductListResponse<ProductInfo> response =
@@ -320,12 +339,20 @@ class ProductServiceTest {
     // Mock repository to return the page
     when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
         .thenReturn(productPage);
-    when(productMapper.productToProductListing(any(Product.class)))
+    when(productMapper.toProductListing(any(Product.class)))
         .thenAnswer(
             invocation -> {
               Product p = invocation.getArgument(0);
               return new ProductListing(
                   p.getId(), p.getName(), p.getSeller().getId(), p.getStock(), p.getPrice());
+            });
+    when(pageMapper.toProductListResponse(any(Page.class)))
+        .thenAnswer(
+            invocation -> {
+              Page<?> p = invocation.getArgument(0);
+              return new ProductListResponse<>(
+                  p.getContent(),
+                  new Metadata(p.getTotalElements(), p.getNumber(), p.getSize(), p.hasNext()));
             });
     // When
     var response = productService.getUserFavouriteProductListingList(request);

@@ -113,7 +113,7 @@ public class Order {
     this.status = status;
   }
 
-  public Long getcTime() {
+  public Long getCTime() {
     return cTime;
   }
 
@@ -121,7 +121,7 @@ public class Order {
     this.cTime = cTime;
   }
 
-  public Long getmTime() {
+  public Long getMTime() {
     return mTime;
   }
 
