@@ -98,9 +98,7 @@ public class ProductService {
       userService.validateSellerId(sellerId);
     }
     Page<ProductListing> page = getProductListingList(request, sellerId);
-    return new ProductListResponse<>(
-        page.toList(),
-        new Metadata(page.getTotalElements(), page.getNumber(), page.getSize(), page.hasNext()));
+    return pageMapper.toProductListResponse(page);
   }
 
   public ProductListResponse<ProductInfo> getSellerProductInfoList(ProductListRequest request) {

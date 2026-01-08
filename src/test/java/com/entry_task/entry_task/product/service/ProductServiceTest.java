@@ -144,6 +144,14 @@ class ProductServiceTest {
               return new ProductListing(
                   p.getId(), p.getName(), p.getSeller().getId(), p.getStock(), p.getPrice());
             });
+    when(pageMapper.toProductListResponse(any(Page.class)))
+      .thenAnswer(
+        invocation -> {
+          Page<?> p = invocation.getArgument(0);
+          return new ProductListResponse<>(
+            p.getContent(),
+            new Metadata(p.getTotalElements(), p.getNumber(), p.getSize(), p.hasNext()));
+        });
     // When
     ProductListResponse<ProductListing> response =
         productService.getUserProductListingList(request, SELLER_ID);
