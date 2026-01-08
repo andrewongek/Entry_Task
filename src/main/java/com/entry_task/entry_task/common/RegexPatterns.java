@@ -17,6 +17,16 @@ public class RegexPatterns {
   public static final String ALPHANUMERIC_PATTERN = "^[a-zA-Z0-9]+$";
 
   /**
+   * UUID_PATTERN: Validates standard UUID format (8-4-4-4-12 hexadecimal characters with hyphens).
+   *
+   * <p>Typical use cases: - resource identifiers - session tokens - unique keys
+   *
+   * <p>Examples: - "123e4567-e89b-12d3-a456-426614174000" - "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+   */
+  public static final String UUID_PATTERN =
+      "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
+
+  /**
    * IDENTIFIER_PATTERN: Validates field or property names that map directly to entity attributes.
    * The value must start with a letter and may contain letters, digits, or underscores.
    *

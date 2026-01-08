@@ -3,7 +3,6 @@ package com.entry_task.entry_task.product.service;
 import com.entry_task.entry_task.auth.service.AuthService;
 import com.entry_task.entry_task.category.entity.Category;
 import com.entry_task.entry_task.category.service.CategoryService;
-import com.entry_task.entry_task.common.dto.Metadata;
 import com.entry_task.entry_task.common.mapper.PageMapper;
 import com.entry_task.entry_task.enums.ProductStatus;
 import com.entry_task.entry_task.enums.Role;
