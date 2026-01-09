@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Pattern;
     description =
         "Request parameters for fetching a list of products with optional filters, pagination, and sorting. Can be left empty for default")
 public record ProductListRequest(
-    @Schema(description = "Keyword to search products by name or description", example = "laptop")
+    @Schema(description = "Keyword to search products by name", example = "laptop")
         @Pattern(regexp = KEYWORD_PATTERN, message = "Category name contains invalid characters")
         String keyword,
     @Schema(description = "Pagination settings") @Valid Pagination pagination,

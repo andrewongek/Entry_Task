@@ -64,25 +64,25 @@ This assignment is designed for developers to build a Spring Boot application fo
 
 ### Admin
 
-5. Authentication  
+1. Authentication  
    1. Register  
    2. Login  
    3. Logout  
-6. View all **Non-Deleted** Products.   
+2. View all **Non-Deleted** Products.   
    1. View **all**   
       1. Have Pagination/Filtering/Sorting  
    2. View specific seller products  
    3. View one in detail  
       1. Same details as the seller.  
-7. Create Product for Seller   
-8. Change Product Status  
+3. Create Product for Seller   
+4. Change Product Status  
    1. Set Inactive to Active  
    2. Set Active to Inactive  
       1. *Similar idea to being banned*  
-9. Category  
+5. Category  
    1. Create Categories for products  
    2. Delete Categories for products  
-10. Orders  
+6. Orders  
     1. View **all** orders  
        1. Have Pagination/Filtering/Sorting
 
@@ -136,3 +136,318 @@ Why Monoliths
 ### Database Design
 
 ![img.png](databaseDiagram.png)
+
+### APIs
+#### Authentication APIs
+1. POST /api/auth/register
+   - Role: Public
+   - Registers a new user (Customer, Seller) 
+   - Logic:  
+     - Validate input data
+       - Username must be between 3 and 30 characters
+       - Username and Email must be unique
+       - Username must be alphanumeric without spaces
+       - Password must be at least 6 characters
+       - Email must be valid format
+       - Role must be either "Customer" or "Seller"
+     - Encrypt password  
+     - Store user in database with role
+   - Request Body: {username, email, password, role}  
+   - Response: Success/Failure message
+
+2. POST /api/auth/admin/register
+   - Role: Admin
+   - Registers a new admin user
+   - Logic:  
+     - Validate input data
+         - Role can be any
+     - Encrypt password  
+     - Store admin user in database
+   - Request Body: {username, email, password, role}  
+   - Response: Success/Failure message
+
+3. POST /api/auth/login
+   - Role: Public
+   - Authenticates user and returns JWT tokens
+   - Logic:  
+     - Validate credentials
+       - springframework.security.authentication
+     - Generate access and refresh tokens
+       - jjwt library
+       - Access token valid for 15 minutes
+     - Store refresh token in database
+   - Request Body: {username, password}  
+   - Response: {accessToken, refreshToken}
+
+4. POST /api/auth/refresh
+   - Role: Public
+   - Refreshes access token using refresh token
+   - Logic:  
+     - Validate refresh token
+       - Check token signature and expiry
+       - Verify token exists in database
+     - Generate new access token and refresh token
+       - Invalidate old refresh token
+       - Store new refresh token in database
+   - Request Body: {refreshToken}  
+   - Response: {accessToken}
+
+5. POST /api/auth/logout
+   - Role: Authenticated User
+   - Logs out user by invalidating refresh token
+   - Logic:  
+     - Extract user from request token
+     - Invalidate refresh token in database
+     - FE to handle token removal from storage
+   - Request Body: {refreshToken}  
+   - Response: Success/Failure message
+
+#### Category APIs
+1. POST /api/categories
+   - Role: Admin
+   - Creates a new product category
+   - Logic:  
+     - Validate category name uniqueness
+     - Store category in database
+   - Request Body: {name, description}  
+   - Response: Success/Failure message
+
+2. DELETE /api/categories
+   - Role: Admin
+   - Deletes a product category
+   - Logic:  
+     - Validate category exists
+     - Remove category from database
+   - Request Body: {categoryId}  
+   - Response: Success/Failure message
+
+3. GET /api/categories
+   - Role: Authenticated User
+   - Retrieves all product categories for FE
+   - Logic:  
+     - Fetch categories from database
+   - Response: List of categories
+
+#### Product APIs for Sellers
+1. POST /api/seller/products/search 
+   - Role: Seller
+   - Retrieve a paginated list of products. Allows for sorting, filtering and searches
+   - Logic:  
+     - Extract seller from request token
+     - Apply pagination, sorting, filtering based on query params
+     - Fetch products from database
+   - Request Body: {keyword (Only Product Name), pagination, filter, sort)
+   - Response: Paginated list of products
+     - id, name, seller_id, price, stock, description, status
+2. GET /api/seller/products/{productId} 
+   - Role: Seller
+   - Retrieve detailed information about a specific product owned by the seller
+   - Logic:  
+     - Extract seller from request token
+     - Validate product ownership
+     - Fetch product details from database
+   - Response: Product details
+     - id, name, seller_id, price, stock, description, categories, status, c_time, m_time
+3. POST /api/seller/products 
+   - Role: Seller
+   - Create a new product
+   - Logic:  
+     - Extract seller from request token
+     - Validate input data
+     - Store product in database
+   - Request Body: {name, price, stock, description, categories}  
+   - Response: Success/Failure message
+4. DELETE /api/seller/products/{productId} 
+   - Role: Seller
+   - Delete a product owned by the seller
+   - Logic:  
+     - Extract seller from request token
+     - Validate product ownership
+     - Update product status to "Deleted" in database
+   - Response: Success/Failure message
+5. PUT /api/seller/products/{productId} 
+   - Role: Seller
+   - Update details of a product owned by the seller
+   - Logic:  
+     - Extract seller from request token
+     - Validate product ownership
+     - Validate input data
+     - Update product details in database
+   - Request Body: {name, price, stock, description, categories}  
+   - Response: Success/Failure message
+
+Product APIs for Customers
+1. POST /api/products/search 
+   - Role: Customer
+   - Retrieve a paginated list of available products. Allows for sorting, filtering and searches
+   - Logic:  
+     - Apply pagination, sorting, filtering based on query params
+     - Fetch products with status "Active" from database
+   - Request Body: {keyword (Product Name, Description), pagination, filter, sort)
+   - Response: Paginated list of products
+     - id, name, seller_id, price, stock, description, status
+2. POST /api/{sellerId}/search 
+   - Role: Customer
+   - Retrieve a paginated list of available products from a specific seller. Allows for sorting, filtering and searches
+   - Logic:  
+     - Apply pagination, sorting, filtering based on query params
+     - Fetch products with status "Active" from specified seller from database
+   - Request Body: {keyword (Product Name, Description), pagination, filter, sort)
+   - Response: Paginated list of products
+     - id, name, seller_id, price, stock, description, status
+3. GET /api/products/{productId} 
+   - Role: Customer
+   - Retrieve detailed information about a specific available product
+   - Logic:  
+     - Validate product status is "Active"
+     - Fetch product details from database
+   - Response: Product details
+     - id, name, seller_id, price, stock, description, status
+
+#### Admin Product APIs
+1. POST /api/admin/products/search 
+   - Role: Admin
+   - Retrieve a paginated list of all products. Allows for sorting, filtering and searches
+   - Logic:
+     - Apply pagination, sorting, filtering based on query params
+     - Fetch all products from database
+    - Request Body: {keyword (Product Name), pagination, filter, sort)
+    - Response: Paginated list of products
+      - id, name, seller_id, price, stock, description, status
+2. POST /api/admin/{sellerId}/products/search
+   - Role: Admin
+   - Retrieve a paginated list of products from a specific seller. Allows for sorting, filtering and searches
+   - Logic:
+     - Apply pagination, sorting, filtering based on query params
+     - Fetch products from specified seller from database
+    - Request Body: {keyword (Product Name), pagination, filter, sort)
+    - Response: Paginated list of products
+      - id, name, seller_id, price, stock, description, status
+3. GET /api/admin/products/{productId} 
+   - Role: Admin
+   - Retrieve detailed information about a specific product
+   - Logic:  
+     - Fetch product details from database
+   - Response: Product details
+     - id, name, seller_id, price, stock, description, categories, status, c_time, m_time
+4. POST /api/admin/products 
+   - Role: Admin
+   - Create a new product for a seller
+   - Logic:  
+     - Validate input data
+     - Store product in database
+   - Request Body: {name, price, stock, description, categories, sellerId}  
+   - Response: Success/Failure message
+5. PUT /api/admin/products/{productId}/activate
+   - Role: Admin
+   - Set product status to "Active"
+   - Logic:  
+     - Validate product exists
+     - Update product status to "Active" in database
+   - Response: Success/Failure message
+6. PUT /api/admin/products/{productId}/deactivate
+   - Role: Admin
+   - Set product status to "Inactive"
+   - Logic:  
+     - Validate product exists
+     - Update product status to "Inactive" in database
+   - Response: Success/Failure message
+
+#### Favourite APIs
+1. POST /api/favourites/search
+    - Role: Customer
+    - Retrieve a paginated list of favourite products. Allows for sorting and filtering
+    - Logic:  
+      - Extract customer from request token
+      - Apply pagination, sorting, filtering based on query params
+      - Fetch favourite products from database
+    - Request Body: {pagination, filter, sort)
+    - Response: Paginated list of favourite products
+      - id, name, seller_id, price, stock
+2. POST /api/favourites/{productId}
+   - Role: Customer
+   - Add a product to favourite list
+   - Logic:  
+     - Extract customer from request token
+     - Validate product status is "Active"
+     - Validate product not already in favourite list
+     - Add product to favourite list in database
+   - Response: Success/Failure message
+3. DELETE /api/favourites/{productId}
+   - Role: Customer
+   - Remove a product from favourite list
+   - Logic:  
+     - Extract customer from request token
+     - Validate product exists in favourite list
+     - Remove product from favourite list in database
+   - Response: Success/Failure message
+
+#### Cart APIs
+1. GET /api/cart
+    - Role: Customer
+    - Retrieves the current contents of the user's shopping cart, including items, total quantity, and total price
+    - Logic:  
+      - Extract customer from request token
+      - Fetch cart items from database
+      - Calculate total quantity and price
+      - Return cart details
+      - Response: {totalItems, totalQuantity, totalPrice, items: [{cartItemId, quantity, ProductListing {id, name, selleid, stock, price}, subTotalPrice}], updatedAt}
+2. PUT /api/cart/
+   - Role: Customer
+   - Adds a product to the user's shopping cart or updates the quantity if it already exists
+   - Logic:  
+     - Extract customer from request token
+     - Validate product status is "Active"
+     - Validate requested quantity does not exceed stock
+     - If product already in cart, update quantity; else add new cart item
+     - If product quantity is set to 0, remove item from cart
+     - Save changes to database
+   - Request Body: {productid, quantity}  
+   - Response: Success/Failure message
+
+#### Customer Order APIs
+1. POST /api/orders/checkout
+   - Role: Customer
+   - Creates an order based on selected cart items
+   - Logic:  
+     - Extract customer from request token
+     - Validate selected cart items exist and belong to customer
+     - Create Order with Idempotency Key to prevent duplicate orders
+     - Validate product stock for each cart item
+     - Create order and order items in database and
+     - Deduct stock from products
+     - Remove purchased items from cart
+   - Request Body: {cartItemIds: []}, idempotencyKey
+   - Response: Success/Failure message with order details
+2. POST /api/orders/search
+   - Role: Customer
+   - Retrieve a paginated list of customer's orders. Allows for sorting and filtering
+   - Logic:  
+     - Extract custo    mer from request token
+     - Apply pagination, sorting, filtering based on query params
+     - Fetch orders from database
+   - Request Body: {pagination, filter, sort)
+   - Response: Paginated list of orders
+     - orderid, totalItems, totalquantity, totalPrice, orderItems[{productid, name, quantity, price, totalsubprice}], status, ctime, mtime
+
+#### Seller Order APIs
+1. POST /api/seller/orders/search
+    - Role: Seller
+    - Retrieve a paginated list of orders for products sold by the seller. Allows for sorting and filtering
+    - Logic:
+    - Extract seller from request token
+      - Apply pagination, sorting, filtering based on query params
+      - Fetch orders containing seller's products from database
+      - Request Body: {pagination, filter, sort)
+      - Response: Paginated list of orders
+        - orderItemId, orderid, buyerid, productid, productname, quantity, price, totalPrice, status, ctime, mtime
+#### Admin Order APIs
+1. POST /api/admin/orders/search
+    - Role: Admin
+    - Retrieve a paginated list of all orders. Allows for sorting and filtering
+    - Logic:
+      - Apply pagination, sorting, filtering based on query params
+      - Fetch all orders from database
+    - Request Body: {pagination, filter, sort)
+    - Response: Paginated list of orders
+        - orderItemId, orderid, buyerid, productid, productname, quantity, price, totalPrice, status, ctime, mtime

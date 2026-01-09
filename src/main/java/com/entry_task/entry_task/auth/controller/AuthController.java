@@ -3,6 +3,7 @@ package com.entry_task.entry_task.auth.controller;
 import com.entry_task.entry_task.auth.dto.*;
 import com.entry_task.entry_task.auth.service.AuthService;
 import com.entry_task.entry_task.common.api.CustomApiResponse;
+import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +34,9 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<CustomApiResponse<Void>> registerUser(
       @Valid @RequestBody RegisterRequest registerRequest) {
+    if (registerRequest.role() == Role.ADMIN) {
+      throw new IllegalArgumentException("Only can register CUSTOMER or SELLER role");
+    }
     userService.registerUser(registerRequest);
     String message = registerRequest.role() + " registered";
     return ResponseEntity.ok(CustomApiResponse.success(message, null));
