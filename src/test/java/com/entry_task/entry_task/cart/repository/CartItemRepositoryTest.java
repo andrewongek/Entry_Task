@@ -1,5 +1,7 @@
 package com.entry_task.entry_task.cart.repository;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.entry_task.entry_task.cart.dto.CartItemDto;
 import com.entry_task.entry_task.cart.entity.Cart;
 import com.entry_task.entry_task.cart.entity.CartItem;
@@ -9,326 +11,333 @@ import com.entry_task.entry_task.product.entity.Product;
 import com.entry_task.entry_task.product.repository.ProductRepository;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
-import jakarta.validation.constraints.AssertTrue;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 @DataJpaTest
 @ActiveProfiles("test")
 class CartItemRepositoryTest {
 
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private ProductRepository productRepository;
+  @Autowired private ProductRepository productRepository;
 
-    @Autowired
-    private CartRepository cartRepository;
+  @Autowired private CartRepository cartRepository;
 
-    @Autowired
-    private CartItemRepository cartItemRepository;
+  @Autowired private CartItemRepository cartItemRepository;
 
-    @Test
-    void findByCartIdAndProductId_cartItemExist_shouldReturnCartItem() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
-        Product product = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product);
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
-        cartItemRepository.save(cartItem);
+  @Test
+  void findByCartIdAndProductId_cartItemExist_shouldReturnCartItem() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
+    Product product = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
+    cartItemRepository.save(cartItem);
 
-        Optional<CartItem> result = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
+    Optional<CartItem> result =
+        cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
 
-        assertTrue(result.isPresent());
-    }
-    @Test
-    void findByCartIdAndProductId_cartDoesNotExist_shouldNotReturnCart() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
-        Product product = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product);
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
-        cartItemRepository.save(cartItem);
+    assertTrue(result.isPresent());
+  }
 
-        Long nonExistCartId = cart.getId() - 1;
+  @Test
+  void findByCartIdAndProductId_cartDoesNotExist_shouldNotReturnCart() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
+    Product product = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
+    cartItemRepository.save(cartItem);
 
-        Optional<CartItem> result = cartItemRepository.findByCartIdAndProductId(nonExistCartId, product.getId());
+    Long nonExistCartId = cart.getId() - 1;
 
-        assertTrue(result.isEmpty());
-    }
-    @Test
-    void findByCartIdAndProductId_productDoesNotExist_shouldNotReturnCart() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
-        Product product = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product);
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
-        cartItemRepository.save(cartItem);
+    Optional<CartItem> result =
+        cartItemRepository.findByCartIdAndProductId(nonExistCartId, product.getId());
 
-        Long nonExistProductId = product.getId() - 1;
+    assertTrue(result.isEmpty());
+  }
 
-        Optional<CartItem> result = cartItemRepository.findByCartIdAndProductId(cart.getId(), nonExistProductId);
+  @Test
+  void findByCartIdAndProductId_productDoesNotExist_shouldNotReturnCart() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
+    Product product = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
+    cartItemRepository.save(cartItem);
 
-        assertTrue(result.isEmpty());
-    }
+    Long nonExistProductId = product.getId() - 1;
 
-    @Test
-    void findCartItemDtos_threeValidCartItems_shouldReturnAll() {
-        User seller = TestEntityFactory.createSeller("seller1");
-        userRepository.save(seller);
-        User seller2 = TestEntityFactory.createSeller("seller2");
-        userRepository.save(seller2);
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
+    Optional<CartItem> result =
+        cartItemRepository.findByCartIdAndProductId(cart.getId(), nonExistProductId);
 
-        Product product1 = TestEntityFactory.createProduct("testProduct1", seller);
-        productRepository.save(product1);
-        Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
-        productRepository.save(product2);
-        Product product3 = TestEntityFactory.createProduct("testProduct3", seller2);
-        productRepository.save(product3);
+    assertTrue(result.isEmpty());
+  }
 
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+  @Test
+  void findCartItemDtos_threeValidCartItems_shouldReturnAll() {
+    User seller = TestEntityFactory.createSeller("seller1");
+    userRepository.save(seller);
+    User seller2 = TestEntityFactory.createSeller("seller2");
+    userRepository.save(seller2);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
-        cartItemRepository.save(cartItem);
-        CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
-        cartItemRepository.save(cartItem2);
-        CartItem cartItem3 = TestEntityFactory.createCartItem(cart, product3);
-        cartItemRepository.save(cartItem3);
+    Product product1 = TestEntityFactory.createProduct("testProduct1", seller);
+    productRepository.save(product1);
+    Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
+    productRepository.save(product2);
+    Product product3 = TestEntityFactory.createProduct("testProduct3", seller2);
+    productRepository.save(product3);
 
-        CartItemDto expected1 = new CartItemDto(
-                cartItem.getId(),
-                cartItem.getQuantity(),
-                product1.getId(),
-                product1.getName(),
-                product1.getPrice(),
-                product1.getStock(),
-                product1.getSeller().getId(),
-                cartItem.getQuantity() * product1.getPrice(),
-                cart.getmTime()
-        );
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
 
-        CartItemDto expected2 = new CartItemDto(
-                cartItem2.getId(),
-                cartItem2.getQuantity(),
-                product2.getId(),
-                product2.getName(),
-                product2.getPrice(),
-                product2.getStock(),
-                product2.getSeller().getId(),
-                cartItem2.getQuantity() * product2.getPrice(),
-                cart.getmTime()
-        );
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
+    cartItemRepository.save(cartItem);
+    CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
+    cartItemRepository.save(cartItem2);
+    CartItem cartItem3 = TestEntityFactory.createCartItem(cart, product3);
+    cartItemRepository.save(cartItem3);
 
-        CartItemDto expected3 = new CartItemDto(
-                cartItem3.getId(),
-                cartItem3.getQuantity(),
-                product3.getId(),
-                product3.getName(),
-                product3.getPrice(),
-                product3.getStock(),
-                product3.getSeller().getId(),
-                cartItem3.getQuantity() * product3.getPrice(),
-                cart.getmTime()
-        );
+    CartItemDto expected1 =
+        new CartItemDto(
+            cartItem.getId(),
+            cartItem.getQuantity(),
+            product1.getId(),
+            product1.getName(),
+            product1.getPrice(),
+            product1.getStock(),
+            product1.getSeller().getId(),
+            cartItem.getQuantity() * product1.getPrice(),
+            cart.getmTime());
 
-        List<CartItemDto> result = cartItemRepository.findCartItemDtos(customer.getId());
+    CartItemDto expected2 =
+        new CartItemDto(
+            cartItem2.getId(),
+            cartItem2.getQuantity(),
+            product2.getId(),
+            product2.getName(),
+            product2.getPrice(),
+            product2.getStock(),
+            product2.getSeller().getId(),
+            cartItem2.getQuantity() * product2.getPrice(),
+            cart.getmTime());
 
-        assertTrue(result.containsAll(List.of(expected1, expected2, expected3)),
-                "CartItemDto list should contain all expected DTOs");
-    }
-    @Test
-    void findCartItemDtos_threeCartItemsOneNotActiveOneDeleted_shouldReturnOne() {
-        User seller = TestEntityFactory.createSeller("seller1");
-        userRepository.save(seller);
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
+    CartItemDto expected3 =
+        new CartItemDto(
+            cartItem3.getId(),
+            cartItem3.getQuantity(),
+            product3.getId(),
+            product3.getName(),
+            product3.getPrice(),
+            product3.getStock(),
+            product3.getSeller().getId(),
+            cartItem3.getQuantity() * product3.getPrice(),
+            cart.getmTime());
 
-        Product product1 = TestEntityFactory.createProduct("testProduct1", seller);
-        productRepository.save(product1);
-        Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
-        product2.setProductStatus(ProductStatus.INACTIVE);
-        productRepository.save(product2);
-        Product product3 = TestEntityFactory.createProduct("testProduct3", seller);
-        product3.setProductStatus(ProductStatus.DELETED);
-        productRepository.save(product3);
+    List<CartItemDto> result = cartItemRepository.findCartItemDtos(customer.getId());
 
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+    assertTrue(
+        result.containsAll(List.of(expected1, expected2, expected3)),
+        "CartItemDto list should contain all expected DTOs");
+  }
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
-        cartItemRepository.save(cartItem);
-        CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
-        cartItemRepository.save(cartItem2);
-        CartItem cartItem3 = TestEntityFactory.createCartItem(cart, product3);
-        cartItemRepository.save(cartItem3);
+  @Test
+  void findCartItemDtos_threeCartItemsOneNotActiveOneDeleted_shouldReturnOne() {
+    User seller = TestEntityFactory.createSeller("seller1");
+    userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
 
-        CartItemDto expected1 = new CartItemDto(
-                cartItem.getId(),
-                cartItem.getQuantity(),
-                product1.getId(),
-                product1.getName(),
-                product1.getPrice(),
-                product1.getStock(),
-                product1.getSeller().getId(),
-                cartItem.getQuantity() * product1.getPrice(),
-                cart.getmTime()
-        );
+    Product product1 = TestEntityFactory.createProduct("testProduct1", seller);
+    productRepository.save(product1);
+    Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
+    product2.setProductStatus(ProductStatus.INACTIVE);
+    productRepository.save(product2);
+    Product product3 = TestEntityFactory.createProduct("testProduct3", seller);
+    product3.setProductStatus(ProductStatus.DELETED);
+    productRepository.save(product3);
 
-        List<CartItemDto> result = cartItemRepository.findCartItemDtos(customer.getId());
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
 
-        assertEquals(1, result.size());
-        assertTrue(result.contains(expected1));
-    }
-    @Test
-    void findCartItemDtos_cartItemDoesNotBelongToUserid_shouldNotReturn() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
-        Product product1 = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product1);
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
+    cartItemRepository.save(cartItem);
+    CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
+    cartItemRepository.save(cartItem2);
+    CartItem cartItem3 = TestEntityFactory.createCartItem(cart, product3);
+    cartItemRepository.save(cartItem3);
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
-        cartItemRepository.save(cartItem);
+    CartItemDto expected1 =
+        new CartItemDto(
+            cartItem.getId(),
+            cartItem.getQuantity(),
+            product1.getId(),
+            product1.getName(),
+            product1.getPrice(),
+            product1.getStock(),
+            product1.getSeller().getId(),
+            cartItem.getQuantity() * product1.getPrice(),
+            cart.getmTime());
 
-        Long anotherUserId = customer.getId() - 1;
+    List<CartItemDto> result = cartItemRepository.findCartItemDtos(customer.getId());
 
-        List<CartItemDto> result = cartItemRepository.findCartItemDtos(anotherUserId);
+    assertEquals(1, result.size());
+    assertTrue(result.contains(expected1));
+  }
 
-        assertTrue(result.isEmpty());
-    }
+  @Test
+  void findCartItemDtos_cartItemDoesNotBelongToUserid_shouldNotReturn() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
+    Product product1 = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product1);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
 
-    @Test
-    void findAllByIdAndUser_existsTwoCartItems_findWithBothIds_shouldReturnBoth() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
+    cartItemRepository.save(cartItem);
 
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
+    Long anotherUserId = customer.getId() - 1;
 
-        Product product1 = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product1);
-        Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
-        productRepository.save(product2);
+    List<CartItemDto> result = cartItemRepository.findCartItemDtos(anotherUserId);
 
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+    assertTrue(result.isEmpty());
+  }
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
-        cartItemRepository.save(cartItem);
-        CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
-        cartItemRepository.save(cartItem2);
+  @Test
+  void findAllByIdAndUser_existsTwoCartItems_findWithBothIds_shouldReturnBoth() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
 
-        List<CartItem> result =  cartItemRepository.findAllByIdAndUser(List.of(cartItem.getId(), cartItem2.getId()), customer);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
 
-        assertEquals(2, result.size());
-        assertTrue(result.containsAll(List.of(cartItem, cartItem2)));
-    }
-    @Test
-    void findAllByIdAndUser_existsThreeCartItems_findWithTwoIds_shouldReturnBothOnly() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
+    Product product1 = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product1);
+    Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
+    productRepository.save(product2);
 
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
 
-        Product product1 = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product1);
-        Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
-        productRepository.save(product2);
-        Product product3 = TestEntityFactory.createProduct("testProduct3", seller);
-        productRepository.save(product3);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
+    cartItemRepository.save(cartItem);
+    CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
+    cartItemRepository.save(cartItem2);
 
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+    List<CartItem> result =
+        cartItemRepository.findAllByIdAndUser(
+            List.of(cartItem.getId(), cartItem2.getId()), customer);
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
-        cartItemRepository.save(cartItem);
-        CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
-        cartItemRepository.save(cartItem2);
-        CartItem cartItem3 = TestEntityFactory.createCartItem(cart, product3);
-        cartItemRepository.save(cartItem3);
+    assertEquals(2, result.size());
+    assertTrue(result.containsAll(List.of(cartItem, cartItem2)));
+  }
 
-        List<CartItem> result =  cartItemRepository.findAllByIdAndUser(List.of(cartItem.getId(), cartItem2.getId()), customer);
+  @Test
+  void findAllByIdAndUser_existsThreeCartItems_findWithTwoIds_shouldReturnBothOnly() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
 
-        assertEquals(2, result.size());
-        assertTrue(result.containsAll(List.of(cartItem, cartItem2)));
-    }
-    @Test
-    void findAllByIdAndUser_existsOneCartItem_findWithOneActualIdAndOneInvalidId_shouldReturnOnlyOne() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
 
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
+    Product product1 = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product1);
+    Product product2 = TestEntityFactory.createProduct("testProduct2", seller);
+    productRepository.save(product2);
+    Product product3 = TestEntityFactory.createProduct("testProduct3", seller);
+    productRepository.save(product3);
 
-        Product product = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
 
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product1);
+    cartItemRepository.save(cartItem);
+    CartItem cartItem2 = TestEntityFactory.createCartItem(cart, product2);
+    cartItemRepository.save(cartItem2);
+    CartItem cartItem3 = TestEntityFactory.createCartItem(cart, product3);
+    cartItemRepository.save(cartItem3);
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
-        cartItemRepository.save(cartItem);
+    List<CartItem> result =
+        cartItemRepository.findAllByIdAndUser(
+            List.of(cartItem.getId(), cartItem2.getId()), customer);
 
-        Long invalidCartItemId = cartItem.getId()+1;
+    assertEquals(2, result.size());
+    assertTrue(result.containsAll(List.of(cartItem, cartItem2)));
+  }
 
-        List<CartItem> result =  cartItemRepository.findAllByIdAndUser(List.of(cartItem.getId(), invalidCartItemId), customer);
+  @Test
+  void
+      findAllByIdAndUser_existsOneCartItem_findWithOneActualIdAndOneInvalidId_shouldReturnOnlyOne() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
 
-        assertEquals(1, result.size());
-        assertTrue(result.contains(cartItem));
-    }
-    @Test
-    void findAllByIdAndUser_existsOneCartItem_findWithOActualIdButNotUser_shouldNotReturn() {
-        User seller = TestEntityFactory.createSeller("seller");
-        userRepository.save(seller);
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
 
-        User customer = TestEntityFactory.createCustomer("customer");
-        userRepository.save(customer);
+    Product product = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product);
 
-        User invalidCustomer = TestEntityFactory.createCustomer("customer2");
-        userRepository.save(invalidCustomer);
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
 
-        Product product = TestEntityFactory.createProduct("testProduct", seller);
-        productRepository.save(product);
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
+    cartItemRepository.save(cartItem);
 
-        Cart cart = TestEntityFactory.createEmptyCart(customer);
-        cartRepository.save(cart);
+    Long invalidCartItemId = cartItem.getId() + 1;
 
-        CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
-        cartItemRepository.save(cartItem);
+    List<CartItem> result =
+        cartItemRepository.findAllByIdAndUser(
+            List.of(cartItem.getId(), invalidCartItemId), customer);
 
+    assertEquals(1, result.size());
+    assertTrue(result.contains(cartItem));
+  }
 
-        List<CartItem> result =  cartItemRepository.findAllByIdAndUser(List.of(cartItem.getId()), invalidCustomer);
+  @Test
+  void findAllByIdAndUser_existsOneCartItem_findWithOActualIdButNotUser_shouldNotReturn() {
+    User seller = TestEntityFactory.createSeller("seller");
+    userRepository.save(seller);
 
-        assertTrue(result.isEmpty());
-    }
+    User customer = TestEntityFactory.createCustomer("customer");
+    userRepository.save(customer);
 
+    User invalidCustomer = TestEntityFactory.createCustomer("customer2");
+    userRepository.save(invalidCustomer);
 
+    Product product = TestEntityFactory.createProduct("testProduct", seller);
+    productRepository.save(product);
 
+    Cart cart = TestEntityFactory.createEmptyCart(customer);
+    cartRepository.save(cart);
+
+    CartItem cartItem = TestEntityFactory.createCartItem(cart, product);
+    cartItemRepository.save(cartItem);
+
+    List<CartItem> result =
+        cartItemRepository.findAllByIdAndUser(List.of(cartItem.getId()), invalidCustomer);
+
+    assertTrue(result.isEmpty());
+  }
 }

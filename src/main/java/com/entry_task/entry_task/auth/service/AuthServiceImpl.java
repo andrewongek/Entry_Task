@@ -1,11 +1,12 @@
 package com.entry_task.entry_task.auth.service;
 
 import com.entry_task.entry_task.auth.dto.LoginRequest;
-import com.entry_task.entry_task.exceptions.InvalidRefreshTokenException;
+import com.entry_task.entry_task.auth.dto.TokenResponse;
 import com.entry_task.entry_task.auth.entity.RefreshToken;
+import com.entry_task.entry_task.exceptions.InvalidRefreshTokenException;
+import com.entry_task.entry_task.security.JwtUtil;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
-import com.entry_task.entry_task.security.JwtUtil;
 import com.entry_task.entry_task.user.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,81 +20,94 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+  private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
-    private final UserRepository userRepository;
-    private final UserService userService;
-    private final RefreshTokenService refreshTokenService;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
+  private final UserRepository userRepository;
+  private final UserService userService;
+  private final RefreshTokenService refreshTokenService;
+  private final AuthenticationManager authenticationManager;
+  private final JwtUtil jwtUtil;
 
-    public AuthServiceImpl(UserRepository userRepository, UserService userService, RefreshTokenService refreshTokenService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.userService = userService;
-        this.refreshTokenService = refreshTokenService;
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
+  public AuthServiceImpl(
+      UserRepository userRepository,
+      UserService userService,
+      RefreshTokenService refreshTokenService,
+      AuthenticationManager authenticationManager,
+      JwtUtil jwtUtil) {
+    this.userRepository = userRepository;
+    this.userService = userService;
+    this.refreshTokenService = refreshTokenService;
+    this.authenticationManager = authenticationManager;
+    this.jwtUtil = jwtUtil;
+  }
+
+  @Override
+  public User getCurrentUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication == null
+        || !authentication.isAuthenticated()
+        || authentication.getPrincipal().equals("anonymousUser")) {
+      throw new AuthenticationCredentialsNotFoundException("User is not authenticated");
     }
 
-    @Override
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
 
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new AuthenticationCredentialsNotFoundException("User is not authenticated");
-        }
+    return userRepository
+        .findByUsername(username)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+  }
 
-        String username = authentication.getName();
+  @Override
+  public TokenResponse login(LoginRequest loginRequest) {
+    String username = loginRequest.username().trim();
+    Authentication authentication =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(username, loginRequest.password()));
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+    String accessToken = jwtUtil.generateToken(userDetails.getUsername());
+    User user = userService.getUserByUsername(userDetails.getUsername());
+    RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+    log.info("User logged in successfully: userId={}", user.getId());
+    return new TokenResponse(accessToken, refreshToken.getToken());
+  }
+
+  @Override
+  @Transactional
+  public TokenResponse refresh(String requestToken) {
+    RefreshToken token =
+        refreshTokenService
+            .findByToken(requestToken)
+            .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
+
+    if (refreshTokenService.isTokenExpired(token)) {
+      refreshTokenService.deleteToken(token);
+      throw new InvalidRefreshTokenException("Refresh token expired. Please login again.");
     }
 
-    @Override
-    public Map<String, Object> login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password())
-        );
+    String newAccessToken = jwtUtil.generateToken(token.getUser().getUsername());
+    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(token.getUser());
+    refreshTokenService.deleteToken(token);
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String accessToken = jwtUtil.generateToken(userDetails.getUsername());
-        long userId = userService.getIdByUsername(userDetails.getUsername());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userId);
-        log.info("User logged in successfully: userId={}", userId);
-        return Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken.getToken()
-        );
+    return new TokenResponse(newAccessToken, newRefreshToken.getToken());
+  }
+
+  @Override
+  @Transactional
+  public void delete(String requestToken) {
+    if (requestToken == null || requestToken.isBlank()) {
+      throw new InvalidRefreshTokenException("Refresh token is required.");
     }
 
-    @Override
-    public Map<String, String> refresh(String requestToken) {
-        return refreshTokenService.findByToken(requestToken).map(token -> {
-            if (refreshTokenService.isTokenExpired(token)) {
-                refreshTokenService.deleteToken(token);
-                throw new InvalidRefreshTokenException("Refresh token expired. Please login again.");
-            }
-            String newJwt = jwtUtil.generateToken(token.getUser().getUsername());
-            return Map.of("token", newJwt);
-        }).orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
-    }
+    var token =
+        refreshTokenService
+            .findByToken(requestToken)
+            .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
 
-    @Override
-    @Transactional
-    public void delete(String requestToken) {
-        if (requestToken == null || requestToken.isBlank()) {
-            throw new InvalidRefreshTokenException("Refresh token is required.");
-        }
-
-        var token = refreshTokenService.findByToken(requestToken)
-                .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
-
-        refreshTokenService.deleteToken(token);
-    }
+    refreshTokenService.deleteToken(token);
+  }
 }

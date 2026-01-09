@@ -19,19 +19,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RequestMapping("/api/seller/orders")
 public class SellerOrderController {
-    private final OrderService orderService;
+  private final OrderService orderService;
 
-    public SellerOrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+  public SellerOrderController(OrderService orderService) {
+    this.orderService = orderService;
+  }
 
-    @Operation(
-            summary = "Get list of order invoice items",
-            description = "Retrieves a list of order item details, filtered and paginated according to the request."
-    )
-    @PostMapping("/search")
-    public ResponseEntity<CustomApiResponse<OrderInvoiceItemListResponse>> getOrderInvoiceItemList (@Valid @RequestBody SellerOrderInvoiceItemListRequest request) {
-        OrderInvoiceItemListResponse response = orderService.getSellerOrderInvoiceItemList(request);
-        return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
-    }
+  @Operation(
+      summary = "Get list of order invoice items",
+      description =
+          "Retrieves a list of order item details, filtered and paginated according to the request.")
+  @PostMapping("/search")
+  public ResponseEntity<CustomApiResponse<OrderInvoiceItemListResponse>> getOrderInvoiceItemList(
+      @Valid @RequestBody SellerOrderInvoiceItemListRequest request) {
+    OrderInvoiceItemListResponse response = orderService.getSellerOrderInvoiceItemList(request);
+    return ResponseEntity.ok().body(CustomApiResponse.success("success", response));
+  }
 }

@@ -8,14 +8,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class InstallOpenTelemetryAppender implements InitializingBean {
 
-    private final OpenTelemetry openTelemetry;
+  private final OpenTelemetry openTelemetry;
 
-    public InstallOpenTelemetryAppender(OpenTelemetry openTelemetry) {
-        this.openTelemetry = openTelemetry;
-    }
+  public InstallOpenTelemetryAppender(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
+  }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        OpenTelemetryAppender.install(openTelemetry);
-    }
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    OpenTelemetryAppender.install(openTelemetry);
+  }
 }

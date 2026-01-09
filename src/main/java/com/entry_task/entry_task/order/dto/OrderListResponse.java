@@ -6,10 +6,6 @@ import java.util.List;
 
 @Schema(description = "Paginated list of user orders")
 public record OrderListResponse(
-
-        @Schema(description = "List of summarized orders")
-        List<OrderSummary> orderSummaries,
-
-        @Schema(description = "Pagination and metadata information for the order list")
-        Metadata metadata
-) {}
+    @Schema(description = "List of summarized orders") List<OrderSummary> orderSummaries,
+    @Schema(description = "Pagination and metadata information for the order list")
+        Metadata metadata) {}

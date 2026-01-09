@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: product-categories-unique
+      author: andrew
+      changes:
+        - addUniqueConstraint:
+            tableName: product_categories
+            columnNames: product_id, category_id
+            constraintName: uq_product_categories_product_category
+
+  - changeSet:
+      id: product-categories-category-product-index
+      author: andrew
+      changes:
+        - createIndex:
+            tableName: product_categories
+            indexName: ix_product_categories_category_product
+            columns:
+              - column:
+                  name: category_id
+              - column:
+                  name: product_id

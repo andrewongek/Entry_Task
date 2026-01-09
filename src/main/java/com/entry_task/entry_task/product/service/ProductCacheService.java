@@ -13,33 +13,34 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ProductCacheService {
-    private final ProductRepository productRepository;
-    private static final Logger log = LoggerFactory.getLogger(ProductCacheService.class);
+  private final ProductRepository productRepository;
+  private static final Logger log = LoggerFactory.getLogger(ProductCacheService.class);
 
-    public ProductCacheService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
+  public ProductCacheService(ProductRepository productRepository) {
+    this.productRepository = productRepository;
+  }
 
-    @Cacheable(value = "product:static", key = "#productId", sync=true)
-    public ProductStatic getProductStatic(long productId) {
-        log.debug("Cache MISS: product:static [{}]", productId);
-        ProductStaticProjection p = productRepository.findProductStatic(productId).orElseThrow(ProductNotFoundException::new);
-        return new ProductStatic(
-                p.getId(),
-                p.getName(),
-                p.getSellerId(),
-                p.getCategoryIds(),
-                p.getDescription(),
-                p.getProductStatus()
-        );
-    }
+  @Cacheable(
+      value = "product:static",
+      key = "#productId",
+      sync = true) // sync=true to ensure only one thread loads the data on cache miss
+  public ProductStatic getProductStatic(long productId) {
+    log.debug("Cache MISS: product:static [{}]", productId);
+    ProductStaticProjection p =
+        productRepository.findProductStatic(productId).orElseThrow(ProductNotFoundException::new);
+    return new ProductStatic(
+        p.getId(),
+        p.getName(),
+        p.getSellerId(),
+        p.getCategoryIds(),
+        p.getDescription(),
+        p.getProductStatus());
+  }
 
-    @Cacheable(value = "product:dynamic", key = "#productId", sync=true)
-    public ProductDynamic getProductDynamic(long productId) {
-        ProductDynamicProjection p = productRepository.findProductDynamic(productId).orElseThrow(ProductNotFoundException::new);
-        return new ProductDynamic(
-                p.getStock(),
-                p.getPrice()
-        );
-    }
+  @Cacheable(value = "product:dynamic", key = "#productId", sync = true)
+  public ProductDynamic getProductDynamic(long productId) {
+    ProductDynamicProjection p =
+        productRepository.findProductDynamic(productId).orElseThrow(ProductNotFoundException::new);
+    return new ProductDynamic(p.getStock(), p.getPrice());
+  }
 }

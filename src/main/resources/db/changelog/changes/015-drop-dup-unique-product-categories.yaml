@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: drop-dup-unique-product-categories
+      author: andrew
+      changes:
+        - dropUniqueConstraint:
+            tableName: product_categories
+            constraintName: uq_product_categories_product_category

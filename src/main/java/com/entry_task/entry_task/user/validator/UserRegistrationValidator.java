@@ -7,31 +7,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserRegistrationValidator {
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    public UserRegistrationValidator(UserRepository userRepository) {
-        this.userRepository = userRepository;
+  public UserRegistrationValidator(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
+
+  public void validateRegistrationRequest(RegisterRequest registerRequest) {
+    if (userRepository.findByUsername(registerRequest.username().trim()).isPresent()) {
+      throw new IllegalArgumentException("Username is already taken");
     }
 
-    public void validateRegistrationRequest(RegisterRequest registerRequest) {
-        if (registerRequest.username() == null || registerRequest.username().isBlank()) {
-            throw new IllegalArgumentException("Username cannot be empty");
-        }
-
-        if (registerRequest.password() == null || registerRequest.password().length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters long");
-        }
-
-        if (registerRequest.email() == null || registerRequest.email().isBlank()) {
-            throw new IllegalArgumentException("Email cannot be empty");
-        }
-
-        if (userRepository.findByUsername(registerRequest.username()).isPresent()) {
-            throw new IllegalArgumentException("Username is already taken");
-        }
-
-        if (userRepository.findByEmail(registerRequest.email()).isPresent()) {
-            throw new IllegalArgumentException("Email is already registered");
-        }
+    if (userRepository.findByEmail(registerRequest.email().trim().toLowerCase()).isPresent()) {
+      throw new IllegalArgumentException("Email is already registered");
     }
+  }
 }

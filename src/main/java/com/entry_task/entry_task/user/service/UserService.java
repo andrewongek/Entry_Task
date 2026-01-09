@@ -1,8 +1,6 @@
 package com.entry_task.entry_task.user.service;
 
 import com.entry_task.entry_task.auth.dto.RegisterRequest;
-import com.entry_task.entry_task.auth.service.AuthServiceImpl;
-import com.entry_task.entry_task.enums.Role;
 import com.entry_task.entry_task.exceptions.UserNotFoundException;
 import com.entry_task.entry_task.user.entity.User;
 import com.entry_task.entry_task.user.repository.UserRepository;
@@ -16,55 +14,67 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+  private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
-    private final UserRegistrationValidator userRegistrationValidator;
+  private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final UserRegistrationValidator userRegistrationValidator;
 
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, UserRegistrationValidator userRegistrationValidator) {
-        this.passwordEncoder = passwordEncoder;
-        this.userRepository = userRepository;
-        this.userRegistrationValidator = userRegistrationValidator;
-    }
+  public UserService(
+      PasswordEncoder passwordEncoder,
+      UserRepository userRepository,
+      UserRegistrationValidator userRegistrationValidator) {
+    this.passwordEncoder = passwordEncoder;
+    this.userRepository = userRepository;
+    this.userRegistrationValidator = userRegistrationValidator;
+  }
 
-    @PreAuthorize("hasAnyRole('SELLER', 'CUSTOMER')")
-    public void registerUser(RegisterRequest registerRequest) {
-        userRegistrationValidator.validateRegistrationRequest(registerRequest);
-        register(registerRequest);
+  public void registerUser(RegisterRequest registerRequest) {
+    userRegistrationValidator.validateRegistrationRequest(registerRequest);
+    register(registerRequest);
+  }
 
-    }
+  @PreAuthorize("hasRole('ADMIN')")
+  public void registerAdmin(RegisterRequest registerRequest) {
+    userRegistrationValidator.validateRegistrationRequest(registerRequest);
+    register(registerRequest);
+  }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public void registerAdmin(RegisterRequest registerRequest) {
-        userRegistrationValidator.validateRegistrationRequest(registerRequest);
-        register(registerRequest);
-    }
+  private void register(RegisterRequest registerRequest) {
+    String username = registerRequest.username().trim();
+    String email = registerRequest.email().trim().toLowerCase();
 
-    private void register(RegisterRequest registerRequest) {
-        User newUser = new User(registerRequest.username(), registerRequest.email(), passwordEncoder.encode(registerRequest.password()), registerRequest.role());
-        newUser = userRepository.save(newUser);
-        log.info("{} username: {} id: {} registered", registerRequest.role(), newUser.getUsername(), newUser.getId());
-    }
+    User newUser =
+        new User(
+            username,
+            email,
+            passwordEncoder.encode(registerRequest.password()),
+            registerRequest.role());
+    newUser = userRepository.save(newUser);
+    log.info(
+        "{} username: {} id: {} registered",
+        registerRequest.role(),
+        newUser.getUsername(),
+        newUser.getId());
+  }
 
-    public long getIdByUsername(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
-        return user.getId();
-    }
+  public User getUserByUsername(String username) {
+    return userRepository.findByUsername(username).orElseThrow(UserNotFoundException::new);
+  }
 
-    public User getUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-    }
+  public User getUserById(Long userId) {
+    return userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+  }
 
-    public User getSellerById(Long sellerId){
-        return userRepository.findSellerById(sellerId).orElseThrow(UserNotFoundException::new);
-    }
+  public void getSellerById(Long sellerId) {
+    userRepository.findSellerById(sellerId).orElseThrow(UserNotFoundException::new);
+  }
 
-    public User findUserBySellerId(Long sellerId) {
-        return getUserById(sellerId);
-    }
+  public User findUserBySellerId(Long sellerId) {
+    return getUserById(sellerId);
+  }
 
-    public void validateSellerId(Long sellerId) {
-        getSellerById(sellerId);
-    }
+  public void validateSellerId(Long sellerId) {
+    getSellerById(sellerId);
+  }
 }
