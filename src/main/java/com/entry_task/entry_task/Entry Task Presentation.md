@@ -114,10 +114,10 @@ Why Monoliths
 
 * Network-based service-to-service communication does **not** exist
 
-| REST (HTTP/JSON) | RPC (e.g. gRPC) |
-| :---- | :---- |
-| Simple to implement and understand | Adds build, versioning, and tooling complexity |
-| Easy to test and demo (Swagger, curl, Postman) | Harder to debug and demonstrate  |
+| REST (HTTP/JSON)                                     | RPC (e.g. gRPC) |
+|:-----------------------------------------------------| :---- |
+| Simple to implement and understand                   | Adds build, versioning, and tooling complexity |
+| Easy to test and demo (Swagger, curl, **Post**man)   | Harder to debug and demonstrate  |
 | Well-suited for external APIs at the system boundary | Designed for network-based service-to-service communication |
 
 **Conclusion**
@@ -133,13 +133,10 @@ Why Monoliths
 * For this project i want to try to implement the core IAM featues to better understand so i will use **JWT with Spring Security** is the cleanest because it achieves stateless auth with minimal infrastructure and keeps the focus on the API and business logic.
 * want to implement the access-token refresh-token flow to balance security and usability.
 
-### Database Design
-
-![img.png](databaseDiagram.png)
 
 ### APIs
 #### Authentication APIs
-1. POST /api/auth/register
+1. **POST** `/api/auth/register`
    - Role: Public
    - Registers a new user (Customer, Seller) 
    - Logic:  
@@ -155,7 +152,7 @@ Why Monoliths
    - Request Body: {username, email, password, role}  
    - Response: Success/Failure message
 
-2. POST /api/auth/admin/register
+2. **POST** `/api/auth/admin/register`
    - Role: Admin
    - Registers a new admin user
    - Logic:  
@@ -166,7 +163,7 @@ Why Monoliths
    - Request Body: {username, email, password, role}  
    - Response: Success/Failure message
 
-3. POST /api/auth/login
+3. **POST** `/api/auth/login`
    - Role: Public
    - Authenticates user and returns JWT tokens
    - Logic:  
@@ -179,7 +176,7 @@ Why Monoliths
    - Request Body: {username, password}  
    - Response: {accessToken, refreshToken}
 
-4. POST /api/auth/refresh
+4. **POST** `/api/auth/refresh`
    - Role: Public
    - Refreshes access token using refresh token
    - Logic:  
@@ -192,7 +189,7 @@ Why Monoliths
    - Request Body: {refreshToken}  
    - Response: {accessToken}
 
-5. POST /api/auth/logout
+5. **POST** `/api/auth/logout`
    - Role: Authenticated User
    - Logs out user by invalidating refresh token
    - Logic:  
@@ -203,7 +200,7 @@ Why Monoliths
    - Response: Success/Failure message
 
 #### Category APIs
-1. POST /api/categories
+1. **POST** `/api/categories`
    - Role: Admin
    - Creates a new product category
    - Logic:  
@@ -212,7 +209,7 @@ Why Monoliths
    - Request Body: {name, description}  
    - Response: Success/Failure message
 
-2. DELETE /api/categories
+2. **DELETE** `/api/categories`
    - Role: Admin
    - Deletes a product category
    - Logic:  
@@ -221,7 +218,7 @@ Why Monoliths
    - Request Body: {categoryId}  
    - Response: Success/Failure message
 
-3. GET /api/categories
+3. **GET** `/api/categories`
    - Role: Authenticated User
    - Retrieves all product categories for FE
    - Logic:  
@@ -229,7 +226,7 @@ Why Monoliths
    - Response: List of categories
 
 #### Product APIs for Sellers
-1. POST /api/seller/products/search 
+1. **POST** `/api/seller/products/search` 
    - Role: Seller
    - Retrieve a paginated list of products. Allows for sorting, filtering and searches
    - Logic:  
@@ -239,7 +236,7 @@ Why Monoliths
    - Request Body: {keyword (Only Product Name), pagination, filter, sort)
    - Response: Paginated list of products
      - id, name, seller_id, price, stock, description, status
-2. GET /api/seller/products/{productId} 
+2. **GET** `/api/seller/products/{productId}` 
    - Role: Seller
    - Retrieve detailed information about a specific product owned by the seller
    - Logic:  
@@ -248,7 +245,7 @@ Why Monoliths
      - Fetch product details from database
    - Response: Product details
      - id, name, seller_id, price, stock, description, categories, status, c_time, m_time
-3. POST /api/seller/products 
+3. **POST** `/api/seller/products` 
    - Role: Seller
    - Create a new product
    - Logic:  
@@ -257,7 +254,7 @@ Why Monoliths
      - Store product in database
    - Request Body: {name, price, stock, description, categories}  
    - Response: Success/Failure message
-4. DELETE /api/seller/products/{productId} 
+4. **DELETE** `/api/seller/products/{productId}` 
    - Role: Seller
    - Delete a product owned by the seller
    - Logic:  
@@ -265,7 +262,7 @@ Why Monoliths
      - Validate product ownership
      - Update product status to "Deleted" in database
    - Response: Success/Failure message
-5. PUT /api/seller/products/{productId} 
+5. **PUT** `/api/seller/products/{productId}` 
    - Role: Seller
    - Update details of a product owned by the seller
    - Logic:  
@@ -277,7 +274,7 @@ Why Monoliths
    - Response: Success/Failure message
 
 Product APIs for Customers
-1. POST /api/products/search 
+1. **POST** `/api/products/search` 
    - Role: Customer
    - Retrieve a paginated list of available products. Allows for sorting, filtering and searches
    - Logic:  
@@ -286,7 +283,7 @@ Product APIs for Customers
    - Request Body: {keyword (Product Name, Description), pagination, filter, sort)
    - Response: Paginated list of products
      - id, name, seller_id, price, stock, description, status
-2. POST /api/{sellerId}/search 
+2. **POST** `/api/{sellerId}/search` 
    - Role: Customer
    - Retrieve a paginated list of available products from a specific seller. Allows for sorting, filtering and searches
    - Logic:  
@@ -295,7 +292,7 @@ Product APIs for Customers
    - Request Body: {keyword (Product Name, Description), pagination, filter, sort)
    - Response: Paginated list of products
      - id, name, seller_id, price, stock, description, status
-3. GET /api/products/{productId} 
+3. **GET** `/api/products/{productId}` 
    - Role: Customer
    - Retrieve detailed information about a specific available product
    - Logic:  
@@ -305,7 +302,7 @@ Product APIs for Customers
      - id, name, seller_id, price, stock, description, status
 
 #### Admin Product APIs
-1. POST /api/admin/products/search 
+1. **POST** `/api/admin/products/search` 
    - Role: Admin
    - Retrieve a paginated list of all products. Allows for sorting, filtering and searches
    - Logic:
@@ -314,7 +311,7 @@ Product APIs for Customers
     - Request Body: {keyword (Product Name), pagination, filter, sort)
     - Response: Paginated list of products
       - id, name, seller_id, price, stock, description, status
-2. POST /api/admin/{sellerId}/products/search
+2. **POST** `/api/admin/{sellerId}/products/search`
    - Role: Admin
    - Retrieve a paginated list of products from a specific seller. Allows for sorting, filtering and searches
    - Logic:
@@ -323,14 +320,14 @@ Product APIs for Customers
     - Request Body: {keyword (Product Name), pagination, filter, sort)
     - Response: Paginated list of products
       - id, name, seller_id, price, stock, description, status
-3. GET /api/admin/products/{productId} 
+3. **GET** `/api/admin/products/{productId}` 
    - Role: Admin
    - Retrieve detailed information about a specific product
    - Logic:  
      - Fetch product details from database
    - Response: Product details
      - id, name, seller_id, price, stock, description, categories, status, c_time, m_time
-4. POST /api/admin/products 
+4. **POST** `/api/admin/products` 
    - Role: Admin
    - Create a new product for a seller
    - Logic:  
@@ -338,14 +335,14 @@ Product APIs for Customers
      - Store product in database
    - Request Body: {name, price, stock, description, categories, sellerId}  
    - Response: Success/Failure message
-5. PUT /api/admin/products/{productId}/activate
+5. **PUT** `/api/admin/products/{productId}/activate`
    - Role: Admin
    - Set product status to "Active"
    - Logic:  
      - Validate product exists
      - Update product status to "Active" in database
    - Response: Success/Failure message
-6. PUT /api/admin/products/{productId}/deactivate
+6. **PUT** `/api/admin/products/{productId}/deactivate`
    - Role: Admin
    - Set product status to "Inactive"
    - Logic:  
@@ -354,7 +351,7 @@ Product APIs for Customers
    - Response: Success/Failure message
 
 #### Favourite APIs
-1. POST /api/favourites/search
+1. **POST** `/api/favourites/search`
     - Role: Customer
     - Retrieve a paginated list of favourite products. Allows for sorting and filtering
     - Logic:  
@@ -364,7 +361,7 @@ Product APIs for Customers
     - Request Body: {pagination, filter, sort)
     - Response: Paginated list of favourite products
       - id, name, seller_id, price, stock
-2. POST /api/favourites/{productId}
+2. **POST** `/api/favourites/{productId}`
    - Role: Customer
    - Add a product to favourite list
    - Logic:  
@@ -373,7 +370,7 @@ Product APIs for Customers
      - Validate product not already in favourite list
      - Add product to favourite list in database
    - Response: Success/Failure message
-3. DELETE /api/favourites/{productId}
+3. **DELETE** `/api/favourites/{productId}`
    - Role: Customer
    - Remove a product from favourite list
    - Logic:  
@@ -383,7 +380,7 @@ Product APIs for Customers
    - Response: Success/Failure message
 
 #### Cart APIs
-1. GET /api/cart
+1. **GET** `/api/cart`
     - Role: Customer
     - Retrieves the current contents of the user's shopping cart, including items, total quantity, and total price
     - Logic:  
@@ -392,7 +389,7 @@ Product APIs for Customers
       - Calculate total quantity and price
       - Return cart details
       - Response: {totalItems, totalQuantity, totalPrice, items: [{cartItemId, quantity, ProductListing {id, name, selleid, stock, price}, subTotalPrice}], updatedAt}
-2. PUT /api/cart/
+2. **PUT** `/api/cart/`
    - Role: Customer
    - Adds a product to the user's shopping cart or updates the quantity if it already exists
    - Logic:  
@@ -406,7 +403,7 @@ Product APIs for Customers
    - Response: Success/Failure message
 
 #### Customer Order APIs
-1. POST /api/orders/checkout
+1. **POST** `/api/orders/checkout`
    - Role: Customer
    - Creates an order based on selected cart items
    - Logic:  
@@ -419,7 +416,7 @@ Product APIs for Customers
      - Remove purchased items from cart
    - Request Body: {cartItemIds: []}, idempotencyKey
    - Response: Success/Failure message with order details
-2. POST /api/orders/search
+2. **POST** `/api/orders/search`
    - Role: Customer
    - Retrieve a paginated list of customer's orders. Allows for sorting and filtering
    - Logic:  
@@ -431,7 +428,7 @@ Product APIs for Customers
      - orderid, totalItems, totalquantity, totalPrice, orderItems[{productid, name, quantity, price, totalsubprice}], status, ctime, mtime
 
 #### Seller Order APIs
-1. POST /api/seller/orders/search
+1. **POST** `/api/seller/orders/search`
     - Role: Seller
     - Retrieve a paginated list of orders for products sold by the seller. Allows for sorting and filtering
     - Logic:
@@ -442,7 +439,7 @@ Product APIs for Customers
       - Response: Paginated list of orders
         - orderItemId, orderid, buyerid, productid, productname, quantity, price, totalPrice, status, ctime, mtime
 #### Admin Order APIs
-1. POST /api/admin/orders/search
+1. **POST** `/api/admin/orders/search`
     - Role: Admin
     - Retrieve a paginated list of all orders. Allows for sorting and filtering
     - Logic:
@@ -451,3 +448,7 @@ Product APIs for Customers
     - Request Body: {pagination, filter, sort)
     - Response: Paginated list of orders
         - orderItemId, orderid, buyerid, productid, productname, quantity, price, totalPrice, status, ctime, mtime
+
+### Database Design
+
+![img.png](databaseDiagram.png)
